@@ -1,4 +1,16 @@
 spring:
+  datasource:
+    url: jdbc:mariadb://127.0.0.1:3306/dating_db
+    username: root
+    password: "5381"
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
   security:
     oauth2:
       client:
@@ -9,3 +21,12 @@ spring:
             scope:
               - email
               - profile
+
+app:
+  jwt:
+    secret: change-this-secret-key-change-this-secret-key
+    expiration-ms: 3600000
+  admin:
+    review-key: change-admin-review-key
+  upload:
+    dir: uploads

@@ -15,44 +15,32 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "user_profile_images")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class UserProfileImage {
 
+    // 가입 심사에 사용하는 프로필 사진 정보를 저장한다.
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @Column(nullable = false)
+    private Long userId;
+
+    @Column(nullable = false, length = 500)
+    private String imageUrl;
 
     @Column(nullable = false)
-    private String nickname;
-
-    @Column(nullable = false)
-    private String provider;
+    private Integer imageOrder;
 
     @Column(nullable = false)
     @Builder.Default
-    private String status = "ACTIVE";
+    private Boolean isMain = false;
 
-    @Column
-    private String reviewComment;
-
-    @Column
-    private String password;
-
-    @Column
-    private String resetPasswordToken;
-
-    @Column
-    private LocalDateTime resetPasswordTokenExpiresAt;
-
-    // 계정의 생성 시각을 보관한다.
     @Column(nullable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

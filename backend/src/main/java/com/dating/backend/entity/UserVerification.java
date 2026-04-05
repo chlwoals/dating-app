@@ -12,48 +12,45 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "user_verifications")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class UserVerification {
+
+    // 본인인증 및 기본 신원 확인 정보를 저장한다.
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String email;
+    private Long userId;
 
     @Column(nullable = false)
-    private String nickname;
+    private LocalDate birthDate;
 
     @Column(nullable = false)
-    private String provider;
+    private String gender;
 
     @Column(nullable = false)
     @Builder.Default
-    private String status = "ACTIVE";
+    private Boolean isVerified = false;
 
     @Column
-    private String reviewComment;
+    private LocalDateTime verifiedAt;
 
-    @Column
-    private String password;
-
-    @Column
-    private String resetPasswordToken;
-
-    @Column
-    private LocalDateTime resetPasswordTokenExpiresAt;
-
-    // 계정의 생성 시각을 보관한다.
     @Column(nullable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(nullable = false)
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }
