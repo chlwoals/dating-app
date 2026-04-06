@@ -1,8 +1,19 @@
 import axios from "axios";
 import { clearToken, getToken } from "../utils/auth";
 
+function resolveApiBaseUrl() {
+  const envBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  if (envBaseUrl) {
+    return envBaseUrl;
+  }
+
+  const hostname = window.location.hostname || "localhost";
+  return `http://${hostname}:8080/api`;
+}
+
 const api = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: resolveApiBaseUrl(),
 });
 
 // 저장된 JWT가 있으면 모든 API 요청에 Authorization 헤더를 붙인다.

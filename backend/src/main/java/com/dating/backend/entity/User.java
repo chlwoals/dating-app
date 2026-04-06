@@ -27,33 +27,37 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "nickname", nullable = false, unique = true, length = 255)
     private String nickname;
 
-    @Column(nullable = false)
+    @Column(name = "provider", nullable = false, length = 20)
     private String provider;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false, length = 30)
     @Builder.Default
     private String status = "ACTIVE";
 
-    @Column
+    @Column(name = "review_comment", length = 255)
     private String reviewComment;
 
-    @Column
+    // 비밀번호는 해시된 값만 저장하며 users.password_hash 컬럼에 매핑한다.
+    @Column(name = "password_hash", length = 255)
     private String password;
 
-    @Column
+    @Column(name = "reset_password_token", length = 255)
     private String resetPasswordToken;
 
-    @Column
+    @Column(name = "reset_password_token_expires_at")
     private LocalDateTime resetPasswordTokenExpiresAt;
 
-    // 계정의 생성 시각을 보관한다.
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at", nullable = false)
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

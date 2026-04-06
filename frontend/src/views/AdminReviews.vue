@@ -42,13 +42,13 @@
           </div>
 
           <div class="info-grid">
-            <div><span>지역</span><strong>{{ candidate.region || "-" }}</strong></div>
-            <div><span>직업</span><strong>{{ candidate.job || "-" }}</strong></div>
-            <div><span>MBTI</span><strong>{{ candidate.mbti || "-" }}</strong></div>
+            <div><span>지역</span><strong>{{ candidate.region || '-' }}</strong></div>
+            <div><span>직업</span><strong>{{ candidate.job || '-' }}</strong></div>
+            <div><span>MBTI</span><strong>{{ candidate.mbti || '-' }}</strong></div>
             <div><span>성별/생년월일</span><strong>{{ candidate.gender }} / {{ candidate.birthDate }}</strong></div>
           </div>
 
-          <p class="intro">{{ candidate.introduction || "자기소개 없음" }}</p>
+          <p class="intro">{{ candidate.introduction || '자기소개 없음' }}</p>
 
           <div class="review-rule" :class="{ incomplete: !hasMinimumImages(candidate) }">
             <strong>심사 사진 수</strong>
@@ -58,7 +58,7 @@
           <div class="image-list" v-if="candidate.images.length">
             <div v-for="image in candidate.images" :key="image.id" class="image-item">
               <img :src="toAbsoluteImageUrl(image.imageUrl)" alt="profile review" />
-              <span>{{ image.imageOrder }}번 사진{{ image.isMain ? " · 대표" : "" }}</span>
+              <span>{{ image.imageOrder }}번 사진{{ image.isMain ? ' · 대표' : '' }}</span>
             </div>
           </div>
 
@@ -74,11 +74,7 @@
           </label>
 
           <div class="action-row">
-            <button
-              class="approve-button"
-              :disabled="!hasMinimumImages(candidate)"
-              @click="approveCandidate(candidate.userId)"
-            >
+            <button class="approve-button" :disabled="!hasMinimumImages(candidate)" @click="approveCandidate(candidate.userId)">
               승인
             </button>
             <button class="reject-button" @click="rejectCandidate(candidate.userId)">반려</button>
@@ -121,7 +117,6 @@ const persistAdminKey = () => {
 
 const hasMinimumImages = (candidate) => candidate.images.length >= 2;
 
-// 운영자가 심사 대상 목록을 상태별로 조회한다.
 const loadCandidates = async () => {
   loading.value = true;
   message.value = "";

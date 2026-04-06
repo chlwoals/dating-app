@@ -29,7 +29,6 @@ import { clearToken } from "../utils/auth";
 
 const router = useRouter();
 
-// 가입 완료 화면은 승인된 계정만 접근할 수 있도록 한 번 더 상태를 확인한다.
 onMounted(async () => {
   try {
     const { data } = await api.get("/user/me");

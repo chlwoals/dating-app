@@ -56,7 +56,7 @@ const providerMessage = computed(() => {
     return "현재는 이메일 로그인만 연결되어 있습니다. 같은 이메일로 Google 로그인하면 자동으로 연결됩니다.";
   }
 
-  return "로그인 수단을 확인하는 중입니다.";
+  return "로그인 연결 상태를 확인하는 중입니다.";
 });
 
 onMounted(async () => {

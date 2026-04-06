@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -24,7 +23,7 @@ public class FileStorageService {
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
     private final UploadProperties uploadProperties;
 
-    // 업로드된 프로필 사진을 로컬 디렉터리에 저장하고 접근 가능한 URL 경로를 돌려준다.
+    // 업로드한 프로필 사진을 로컬 디렉터리에 저장하고 접근 가능한 경로를 반환한다.
     public String storeProfileImage(Long userId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "업로드할 이미지 파일이 필요합니다.");

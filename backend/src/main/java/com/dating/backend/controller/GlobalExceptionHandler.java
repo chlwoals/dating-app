@@ -2,6 +2,7 @@ package com.dating.backend.controller;
 
 import com.dating.backend.dto.ApiErrorResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -27,13 +28,41 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .map(error -> {
                     if (error instanceof FieldError fieldError) {
-                        return fieldError.getField() + " 값이 올바르지 않습니다.";
+                        if (fieldError.getDefaultMessage() != null && !fieldError.getDefaultMessage().isBlank()) {
+                            return fieldError.getDefaultMessage();
+                        }
+                        return fieldError.getField() + " 값을 다시 확인해주세요.";
                     }
-                    return "입력값을 다시 확인해주세요.";
+                    return error.getDefaultMessage() != null ? error.getDefaultMessage() : "입력값을 다시 확인해주세요.";
                 })
                 .orElse("입력값을 다시 확인해주세요.");
 
         return ResponseEntity.badRequest().body(new ApiErrorResponse("VALIDATION_ERROR", message));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException exception) {
+        String rawMessage = exception.getMostSpecificCause() != null
+                ? exception.getMostSpecificCause().getMessage()
+                : exception.getMessage();
+
+        String message = "중복되거나 허용되지 않는 값이 있습니다. 입력값을 다시 확인해주세요.";
+        if (rawMessage != null) {
+            if (rawMessage.contains("uk_users_email")) {
+                message = "이미 가입된 이메일입니다.";
+            } else if (rawMessage.contains("uk_users_nickname")) {
+                message = "이미 사용 중인 닉네임입니다.";
+            } else if (rawMessage.contains("uk_users_phone")) {
+                message = "이미 사용 중인 휴대폰 번호입니다.";
+            } else if (rawMessage.contains("uk_user_profile_images_main_user")) {
+                message = "대표 사진은 한 장만 지정할 수 있습니다. 다시 시도해주세요.";
+            } else if (rawMessage.contains("uk_user_profile_images_user_order")) {
+                message = "같은 사진 순서에는 한 장만 등록할 수 있습니다. 다른 순서를 선택해주세요.";
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("DUPLICATE_VALUE", message));
     }
 
     @ExceptionHandler(Exception.class)
