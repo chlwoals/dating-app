@@ -1,19 +1,23 @@
 package com.dating.backend.controller;
 
+import com.dating.backend.dto.AdminMemoRequest;
 import com.dating.backend.dto.AdminRejectRequest;
 import com.dating.backend.dto.AdminReviewCandidateResponse;
 import com.dating.backend.dto.AdminReviewDecisionResponse;
+import com.dating.backend.dto.AdminReviewSummaryResponse;
+import com.dating.backend.dto.MessageResponse;
 import com.dating.backend.service.AdminReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -24,17 +28,32 @@ public class AdminReviewController {
 
     private final AdminReviewService adminReviewService;
 
-    // 운영자가 심사 대기 또는 반려 목록을 조회할 때 호출한다.
+    @GetMapping("/summary")
+    public AdminReviewSummaryResponse getSummary(@RequestHeader("X-Admin-Key") String adminKey) {
+        adminReviewService.validateAdminKey(adminKey);
+        return adminReviewService.getSummary();
+    }
+
     @GetMapping
     public List<AdminReviewCandidateResponse> getCandidates(
             @RequestHeader("X-Admin-Key") String adminKey,
-            @RequestParam(defaultValue = "PENDING_REVIEW") String status
+            @RequestParam(defaultValue = "PENDING_REVIEW") String status,
+            @RequestParam(defaultValue = "false") boolean dueSoonOnly
     ) {
         adminReviewService.validateAdminKey(adminKey);
-        return adminReviewService.getCandidates(status);
+        return adminReviewService.getCandidates(status, dueSoonOnly);
     }
 
-    // 운영자가 사진 심사를 승인할 때 호출한다.
+    @PutMapping("/{userId}/memo")
+    public MessageResponse updateMemo(
+            @PathVariable Long userId,
+            @RequestHeader("X-Admin-Key") String adminKey,
+            @Valid @RequestBody AdminMemoRequest request
+    ) {
+        adminReviewService.validateAdminKey(adminKey);
+        return adminReviewService.updateMemo(userId, request);
+    }
+
     @PostMapping("/{userId}/approve")
     public AdminReviewDecisionResponse approve(
             @PathVariable Long userId,
@@ -44,7 +63,6 @@ public class AdminReviewController {
         return adminReviewService.approve(userId);
     }
 
-    // 운영자가 사진 심사를 반려할 때 호출한다.
     @PostMapping("/{userId}/reject")
     public AdminReviewDecisionResponse reject(
             @PathVariable Long userId,

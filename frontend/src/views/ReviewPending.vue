@@ -6,10 +6,17 @@
       <p class="description">{{ reviewStatus.message }}</p>
 
       <div class="step-box">
-        <div class="step-item active">1. 기본 정보 입력 완료</div>
-        <div class="step-item" :class="{ active: images.length > 0 }">2. 사진 업로드 진행 중</div>
-        <div class="step-item" :class="{ active: reviewStatus.readyForReview }">3. 운영자 심사 대기</div>
-        <div class="step-item" :class="{ active: reviewStatus.status === 'ACTIVE' }">4. 승인 후 가입 완료</div>
+        <div class="step-item active">1. 기본 계정 정보 입력 완료</div>
+        <div class="step-item" :class="{ active: reviewStatus.profileComplete }">2. 프로필 필수 항목 완료</div>
+        <div class="step-item" :class="{ active: images.length > 0 }">3. 사진 업로드 진행 중</div>
+        <div class="step-item" :class="{ active: reviewStatus.readyForReview }">4. 운영자 심사 대기</div>
+        <div class="step-item" :class="{ active: reviewStatus.status === 'ACTIVE' }">5. 승인 후 가입 완료</div>
+      </div>
+
+      <div class="status-box emphasis" :class="deadlineClass" v-if="showDeadlineWarning">
+        <strong>{{ deadlineTitle }}</strong>
+        <p>{{ deadlineMessage }}</p>
+        <p class="sub-text">기한 내에 사진 2장 이상 등록과 프로필 필수 항목 입력이 완료되지 않으면 계정이 자동 정리될 수 있습니다.</p>
       </div>
 
       <div class="status-box">
@@ -18,19 +25,25 @@
         <p v-if="reviewStatus.reviewComment" class="sub-text">{{ reviewStatus.reviewComment }}</p>
       </div>
 
-      <div class="status-box">
-        <strong>등록된 사진</strong>
-        <p>{{ images.length }}장 / 최소 2장 필요, 최대 5장</p>
-        <p v-if="!minimumRequirementMet" class="sub-text">
-          승인 심사를 받으려면 사진을 {{ remainingRequiredImages }}장 더 등록해주세요.
-        </p>
-        <p v-else class="sub-text">
-          최소 등록 조건을 충족했습니다. 원하면 최대 5장까지 더 추가할 수 있습니다.
-        </p>
+      <div class="status-grid">
+        <div class="status-box compact-box">
+          <strong>프로필 필수 항목</strong>
+          <p>{{ reviewStatus.profileComplete ? '완료' : '미완료' }}</p>
+          <p class="sub-text">직업, MBTI, 성격, 이상형, 자기소개까지 채워져야 심사에 올릴 수 있습니다.</p>
+        </div>
+
+        <div class="status-box compact-box">
+          <strong>등록된 사진</strong>
+          <p>{{ images.length }}장 / 최소 2장 필요</p>
+          <p v-if="!minimumRequirementMet" class="sub-text">
+            심사 승인 조건까지 사진 {{ remainingRequiredImages }}장을 더 등록해주세요.
+          </p>
+          <p v-else class="sub-text">최소 조건을 충족했습니다. 원하면 최대 5장까지 더 등록할 수 있습니다.</p>
+        </div>
       </div>
 
       <div class="status-box progress-box">
-        <strong>업로드 진행도</strong>
+        <strong>업로드 진행률</strong>
         <div class="progress-track" aria-hidden="true">
           <div class="progress-fill" :style="{ width: `${uploadProgressPercent}%` }"></div>
         </div>
@@ -45,38 +58,36 @@
             type="file"
             accept="image/png,image/jpeg,image/webp"
             @change="handleFileChange"
-            :disabled="!canUploadMore"
+            :disabled="!canUploadMore || reviewStatus.status === 'DELETED'"
             required
           />
         </label>
 
         <label>
           <span>사진 순서</span>
-          <select v-model.number="form.imageOrder">
+          <select v-model.number="form.imageOrder" :disabled="reviewStatus.status === 'DELETED'">
             <option v-for="order in [1, 2, 3, 4, 5]" :key="order" :value="order">{{ order }}번</option>
           </select>
         </label>
 
         <label class="checkbox-row">
-          <input v-model="form.isMain" type="checkbox" :disabled="!canUploadMore" />
+          <input v-model="form.isMain" type="checkbox" :disabled="!canUploadMore || reviewStatus.status === 'DELETED'" />
           <span>대표 사진으로 지정</span>
         </label>
 
-        <button class="primary-button" :disabled="loading || !canUploadMore">
-          {{ loading ? "등록 중..." : "사진 등록" }}
+        <button class="primary-button" :disabled="loading || !canUploadMore || reviewStatus.status === 'DELETED'">
+          {{ loading ? '등록 중...' : '사진 등록' }}
         </button>
       </form>
 
-      <p v-if="!canUploadMore" class="message success">
-        사진이 5장 모두 등록되었습니다. 다른 순서를 선택하면 기존 사진을 새 사진으로 교체할 수 있습니다.
-      </p>
+      <p v-if="!canUploadMore" class="message success">사진 5장을 모두 등록했습니다. 다른 순서를 선택하면 기존 사진을 새 사진으로 교체할 수 있습니다.</p>
       <p v-if="message" class="message success">{{ message }}</p>
       <p v-if="errorMessage" class="message error">{{ errorMessage }}</p>
 
       <div class="image-list" v-if="images.length">
         <div v-for="image in images" :key="image.id" class="image-item">
           <img :src="toAbsoluteImageUrl(image.imageUrl)" alt="uploaded profile" />
-          <strong>{{ image.imageOrder }}번 사진{{ image.isMain ? " · 대표" : "" }}</strong>
+          <strong>{{ image.imageOrder }}번 사진{{ image.isMain ? ' · 대표' : '' }}</strong>
           <p>{{ image.imageUrl }}</p>
         </div>
       </div>
@@ -109,8 +120,11 @@ const reviewStatus = ref({
   status: "PENDING_REVIEW",
   imageCount: 0,
   readyForReview: false,
+  profileComplete: false,
   reviewComment: "",
   message: "",
+  reviewDeadlineAt: null,
+  remainingDays: -1,
 });
 
 const form = reactive({
@@ -125,6 +139,7 @@ const statusLabel = computed(() => {
   if (reviewStatus.value.status === "ACTIVE") return "승인 완료";
   if (reviewStatus.value.status === "REJECTED") return "반려";
   if (reviewStatus.value.status === "PENDING_REVIEW") return "심사 대기";
+  if (reviewStatus.value.status === "DELETED") return "자동 정리됨";
   return reviewStatus.value.status;
 });
 
@@ -132,6 +147,24 @@ const minimumRequirementMet = computed(() => images.value.length >= 2);
 const remainingRequiredImages = computed(() => Math.max(0, 2 - images.value.length));
 const canUploadMore = computed(() => images.value.length < 5);
 const uploadProgressPercent = computed(() => (images.value.length / 5) * 100);
+const showDeadlineWarning = computed(() => ["PENDING_REVIEW", "REJECTED"].includes(reviewStatus.value.status));
+const deadlineClass = computed(() => {
+  if (reviewStatus.value.remainingDays === 0) return "danger-box";
+  if (reviewStatus.value.remainingDays === 1) return "warning-box";
+  return "info-box";
+});
+const deadlineTitle = computed(() => {
+  if (reviewStatus.value.remainingDays === 0) return "오늘 마감";
+  if (reviewStatus.value.remainingDays === 1) return "마감 임박";
+  return "주의 안내";
+});
+const deadlineMessage = computed(() => {
+  if (!showDeadlineWarning.value) return "";
+  if (reviewStatus.value.remainingDays === 0) return "오늘 안에 프로필과 사진 등록을 완료하지 않으면 계정이 자동 정리될 수 있습니다.";
+  if (reviewStatus.value.remainingDays === 1) return "마감이 하루 남았습니다. 지금 프로필 필수 항목과 사진 등록을 마무리해주세요.";
+  if (reviewStatus.value.remainingDays > 1) return `${reviewStatus.value.remainingDays}일 안에 프로필과 사진 등록을 완료해야 합니다.`;
+  return "기한 내에 완료하지 않으면 계정이 자동 정리될 수 있습니다.";
+});
 const nextAvailableOrder = computed(() => {
   for (let order = 1; order <= 5; order += 1) {
     if (!images.value.some((image) => image.imageOrder === order)) {
@@ -141,16 +174,14 @@ const nextAvailableOrder = computed(() => {
   return 5;
 });
 
-// 심사 상태가 승인으로 바뀌면 알림을 보여준 뒤 가입 완료 화면으로 보낸다.
 const handleApprovedState = () => {
   if (!hasShownSignupApprovalNotice()) {
-    window.alert("사진 심사가 승인되었습니다. 가입이 완료되어 홈으로 이동할 수 있습니다.");
+    window.alert("사진 심사가 승인되었습니다. 가입이 완료되어 다음 화면으로 이동합니다.");
     markSignupApprovalNoticeShown();
   }
   router.replace("/signup-complete");
 };
 
-// 사진 심사 상태와 등록된 사진 목록을 함께 불러온다.
 const refreshStatus = async () => {
   try {
     const [statusRes, imagesRes] = await Promise.all([
@@ -170,7 +201,6 @@ const refreshStatus = async () => {
   }
 };
 
-// 실제 이미지 파일을 서버로 전송하고, 저장된 경로를 프로필 사진으로 등록한다.
 const saveImage = async () => {
   loading.value = true;
   message.value = "";
@@ -193,8 +223,8 @@ const saveImage = async () => {
     });
     images.value = data;
     message.value = data.length >= 2
-      ? "사진이 등록되었습니다. 심사 대기 상태를 유지하며 추가 사진도 더 올릴 수 있습니다."
-      : `사진이 등록되었습니다. 승인 심사를 위해 사진을 ${Math.max(0, 2 - data.length)}장 더 등록해주세요.`;
+      ? "사진을 등록했습니다. 심사 대기 상태를 유지하면서 추가 사진도 계속 등록할 수 있습니다."
+      : `사진을 등록했습니다. 승인 심사를 위해 사진 ${Math.max(0, 2 - data.length)}장을 더 등록해주세요.`;
     form.file = null;
     form.imageOrder = nextAvailableOrder.value;
     form.isMain = false;
@@ -223,7 +253,7 @@ const toAbsoluteImageUrl = (path) => {
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
   }
-  return `http://localhost:8080${path}`;
+  return `http://${window.location.hostname}:8080${path}`;
 };
 
 onMounted(async () => {
@@ -248,7 +278,7 @@ onBeforeUnmount(() => {
 }
 
 .review-card {
-  width: min(100%, 640px);
+  width: min(100%, 720px);
   padding: 32px;
   border-radius: 28px;
   background: rgba(255, 251, 247, 0.94);
@@ -272,7 +302,7 @@ h1 {
 .description {
   margin: 12px 0 24px;
   color: #6d5348;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .step-box {
@@ -296,6 +326,12 @@ h1 {
   border-color: #e4b89f;
 }
 
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
 .status-box,
 .image-item {
   margin-top: 14px;
@@ -305,9 +341,35 @@ h1 {
   border: 1px solid #efd5ca;
 }
 
+.compact-box {
+  margin-top: 0;
+}
+
+.emphasis {
+  border-width: 2px;
+}
+
+.info-box {
+  background: #fff3ed;
+  border-color: #efc0ae;
+}
+
+.warning-box {
+  background: #fff0dc;
+  border-color: #eba35f;
+  box-shadow: 0 0 0 4px rgba(235, 163, 95, 0.12);
+}
+
+.danger-box {
+  background: #ffe7e2;
+  border-color: #e48072;
+  box-shadow: 0 0 0 4px rgba(228, 128, 114, 0.14);
+}
+
 .sub-text {
   margin-top: 8px;
   color: #8d6255;
+  line-height: 1.5;
 }
 
 .progress-box {
@@ -425,7 +487,9 @@ select {
 }
 
 @media (max-width: 640px) {
-  .helper-row {
+  .helper-row,
+  .status-grid {
+    grid-template-columns: 1fr;
     flex-direction: column;
   }
 }

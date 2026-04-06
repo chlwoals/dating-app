@@ -16,7 +16,11 @@ public class AdminReviewCandidateResponse {
     private String nickname;
     private String status;
     private String reviewComment;
+    private String adminMemo;
     private LocalDateTime createdAt;
+    private LocalDateTime reviewDeadlineAt;
+    private boolean profileComplete;
+    private long remainingDays;
     private LocalDate birthDate;
     private String gender;
     private String region;

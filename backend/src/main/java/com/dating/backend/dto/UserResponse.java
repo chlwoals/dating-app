@@ -4,6 +4,8 @@ import com.dating.backend.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor
 public class UserResponse {
@@ -13,6 +15,7 @@ public class UserResponse {
     private String nickname;
     private String provider;
     private String status;
+    private LocalDateTime reviewDeadlineAt;
 
     public static UserResponse from(User user) {
         return new UserResponse(
@@ -20,7 +23,8 @@ public class UserResponse {
                 user.getEmail(),
                 user.getNickname(),
                 user.getProvider(),
-                user.getStatus()
+                user.getStatus(),
+                user.getReviewDeadlineAt()
         );
     }
 }

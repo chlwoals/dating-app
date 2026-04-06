@@ -40,8 +40,9 @@ public class AuthService {
     private final UserVerificationRepository userVerificationRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final AccountReviewPolicyService accountReviewPolicyService;
 
-    // 소개팅 앱 가입 시 계정, 프로필, 인증 기본 정보를 함께 만든다.
+    // 소개팅 앱 가입 시 계정과 기본 프로필/인증 정보를 함께 만든다.
     @Transactional
     public AuthResponse signup(SignupRequest request) {
         validateAdultSignup(request);
@@ -70,27 +71,31 @@ public class AuthService {
             existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
             existingUser.setProvider(PROVIDER_BOTH);
             existingUser.setStatus("PENDING_REVIEW");
-            existingUser.setReviewComment("프로필 사진 심사 대기 중입니다.");
+            existingUser.setReviewComment("프로필 사진 심사 대기 중입니다. 3일 안에 프로필과 사진 등록을 완료해주세요.");
+            existingUser.setReviewDeadlineAt(accountReviewPolicyService.createSignupDeadline());
+            existingUser.setDeletedAt(null);
             clearResetToken(existingUser);
 
             User linkedUser = userRepository.save(existingUser);
-            upsertProfile(linkedUser.getId(), request);
-            upsertVerification(linkedUser.getId(), request);
+            upsertProfile(linkedUser, request);
+            upsertVerification(linkedUser, request);
             return new AuthResponse(jwtUtil.createToken(linkedUser.getEmail()), UserResponse.from(linkedUser));
         }
 
-        User user = userRepository.save(User.builder()
+        User user = User.builder()
                 .email(request.getEmail())
                 .nickname(request.getNickname())
                 .provider(PROVIDER_LOCAL)
                 .status("PENDING_REVIEW")
-                .reviewComment("프로필 사진 심사 대기 중입니다.")
+                .reviewComment("프로필 사진 심사 대기 중입니다. 3일 안에 프로필과 사진 등록을 완료해주세요.")
+                .reviewDeadlineAt(accountReviewPolicyService.createSignupDeadline())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .build());
+                .build();
 
-        upsertProfile(user.getId(), request);
-        upsertVerification(user.getId(), request);
-        return new AuthResponse(jwtUtil.createToken(user.getEmail()), UserResponse.from(user));
+        User savedUser = userRepository.save(user);
+        upsertProfile(savedUser, request);
+        upsertVerification(savedUser, request);
+        return new AuthResponse(jwtUtil.createToken(savedUser.getEmail()), UserResponse.from(savedUser));
     }
 
     // 이메일 로그인 성공 시 JWT를 발급한다.
@@ -102,20 +107,12 @@ public class AuthService {
                         "가입되지 않은 이메일이거나 비밀번호가 올바르지 않습니다."
                 ));
 
-        // 반려/심사대기 계정은 다시 사진을 올릴 수 있어야 하므로 로그인은 허용하고,
-        // 프론트에서 review-pending 화면으로 안내한다.
         if ("SUSPENDED".equals(user.getStatus())) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "정지된 계정입니다. 고객센터에 문의해주세요."
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "정지된 계정입니다. 고객센터로 문의해주세요.");
         }
 
         if ("DELETED".equals(user.getStatus())) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "삭제된 계정입니다. 다시 가입해주세요."
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "기한 내 프로필 또는 사진 등록이 완료되지 않아 계정이 정리되었습니다. 다시 가입해주세요.");
         }
 
         if (!hasLocalPassword(user)) {
@@ -135,14 +132,11 @@ public class AuthService {
         return new AuthResponse(jwtUtil.createToken(user.getEmail()), UserResponse.from(user));
     }
 
-    // 비밀번호 재설정용 토큰을 발급해 users 테이블에 저장한다.
+    // 비밀번호 재설정 토큰을 발급한다.
     @Transactional
     public PasswordResetRequestResponse requestPasswordReset(ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "입력한 이메일로 가입된 계정을 찾을 수 없습니다."
-                ));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "입력한 이메일로 가입한 계정을 찾을 수 없습니다."));
 
         if (!hasLocalPassword(user)) {
             throw new ResponseStatusException(
@@ -157,7 +151,7 @@ public class AuthService {
         userRepository.save(user);
 
         return new PasswordResetRequestResponse(
-                "비밀번호 재설정 토큰이 발급되었습니다. 현재는 개발 단계라 응답으로 바로 반환합니다.",
+                "비밀번호 재설정 토큰을 발급했습니다. 현재는 개발 단계라 응답으로 바로 반환합니다.",
                 token
         );
     }
@@ -166,17 +160,11 @@ public class AuthService {
     @Transactional
     public MessageResponse confirmPasswordReset(PasswordResetConfirmRequest request) {
         User user = userRepository.findByResetPasswordToken(request.getToken())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "유효하지 않은 재설정 토큰입니다."
-                ));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 재설정 토큰입니다."));
 
         if (user.getResetPasswordTokenExpiresAt() == null
                 || user.getResetPasswordTokenExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "재설정 토큰이 만료되었습니다. 다시 요청해주세요."
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "재설정 토큰이 만료되었습니다. 다시 요청해주세요.");
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -187,10 +175,9 @@ public class AuthService {
         return new MessageResponse("비밀번호가 성공적으로 변경되었습니다. 새 비밀번호로 로그인해주세요.");
     }
 
-    // 회원가입 시 프로필 본문 정보를 바로 저장한다.
-    private void upsertProfile(Long userId, SignupRequest request) {
-        UserProfile profile = userProfileRepository.findByUserId(userId)
-                .orElseGet(() -> UserProfile.builder().userId(userId).build());
+    private void upsertProfile(User user, SignupRequest request) {
+        UserProfile profile = userProfileRepository.findByUserId(user.getId())
+                .orElseGet(() -> UserProfile.builder().userId(user.getId()).build());
 
         profile.setRegion(request.getRegion());
         profile.setJob(emptyToNull(request.getJob()));
@@ -203,13 +190,14 @@ public class AuthService {
         profile.setReligion(request.getReligion());
         profile.setUpdatedAt(LocalDateTime.now());
 
-        userProfileRepository.save(profile);
+        UserProfile savedProfile = userProfileRepository.save(profile);
+        updateProfileCompletedAt(user, savedProfile,
+                userVerificationRepository.findByUserId(user.getId()).orElse(null));
     }
 
-    // 회원가입 시 생년월일과 성별 정보를 기본 인증 정보로 저장한다.
-    private void upsertVerification(Long userId, SignupRequest request) {
-        UserVerification verification = userVerificationRepository.findByUserId(userId)
-                .orElseGet(() -> UserVerification.builder().userId(userId).build());
+    private void upsertVerification(User user, SignupRequest request) {
+        UserVerification verification = userVerificationRepository.findByUserId(user.getId())
+                .orElseGet(() -> UserVerification.builder().userId(user.getId()).build());
 
         verification.setBirthDate(request.getBirthDate());
         verification.setGender(request.getGender());
@@ -217,10 +205,27 @@ public class AuthService {
         verification.setVerifiedAt(null);
         verification.setUpdatedAt(LocalDateTime.now());
 
-        userVerificationRepository.save(verification);
+        UserVerification savedVerification = userVerificationRepository.save(verification);
+        updateProfileCompletedAt(user,
+                userProfileRepository.findByUserId(user.getId()).orElse(null),
+                savedVerification);
     }
 
-    // 소개팅 앱 특성상 미성년 가입은 허용하지 않는다.
+    private void updateProfileCompletedAt(User user, UserProfile profile, UserVerification verification) {
+        if (profile == null || verification == null) {
+            return;
+        }
+
+        if (accountReviewPolicyService.isProfileComplete(profile, verification)) {
+            if (user.getProfileCompletedAt() == null) {
+                user.setProfileCompletedAt(LocalDateTime.now());
+            }
+        } else {
+            user.setProfileCompletedAt(null);
+        }
+        userRepository.save(user);
+    }
+
     private void validateAdultSignup(SignupRequest request) {
         LocalDate adultThreshold = LocalDate.now().minusYears(19);
         if (request.getBirthDate().isAfter(adultThreshold)) {

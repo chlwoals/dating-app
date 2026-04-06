@@ -43,6 +43,9 @@ public class User {
     @Column(name = "review_comment", length = 255)
     private String reviewComment;
 
+    @Column(name = "admin_memo", columnDefinition = "TEXT")
+    private String adminMemo;
+
     // 비밀번호는 해시된 값만 저장하며 users.password_hash 컬럼에 매핑한다.
     @Column(name = "password_hash", length = 255)
     private String password;
@@ -52,6 +55,19 @@ public class User {
 
     @Column(name = "reset_password_token_expires_at")
     private LocalDateTime resetPasswordTokenExpiresAt;
+
+    // 심사 대기 또는 반려 후 재등록 기한을 관리한다.
+    @Column(name = "review_deadline_at")
+    private LocalDateTime reviewDeadlineAt;
+
+    @Column(name = "last_warning_sent_at")
+    private LocalDateTime lastWarningSentAt;
+
+    @Column(name = "profile_completed_at")
+    private LocalDateTime profileCompletedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @Column(name = "created_at", nullable = false)
     @Builder.Default

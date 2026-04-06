@@ -4,13 +4,27 @@ import com.dating.backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+
     boolean existsByEmail(String email);
+
     boolean existsByNickname(String nickname);
+
+    long countByStatus(String status);
+
+    long countByStatusInAndReviewDeadlineAtBefore(Collection<String> statuses, LocalDateTime reviewDeadlineAt);
+
     Optional<User> findByEmail(String email);
+
     Optional<User> findByResetPasswordToken(String resetPasswordToken);
-    java.util.List<User> findByStatusOrderByCreatedAtAsc(String status);
+
+    List<User> findByStatusOrderByCreatedAtAsc(String status);
+
+    List<User> findByStatusInAndReviewDeadlineAtBefore(Collection<String> statuses, LocalDateTime reviewDeadlineAt);
 }
