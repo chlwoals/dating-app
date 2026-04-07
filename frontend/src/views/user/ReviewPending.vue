@@ -271,32 +271,39 @@ onBeforeUnmount(() => {
 <style scoped>
 .review-page {
   min-height: 100vh;
-  padding: 24px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, #fff5e9 0%, #ffd7c2 100%);
+  padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: center;
+  background: transparent;
 }
 
 .review-card {
   width: min(100%, 720px);
-  padding: 32px;
-  border-radius: 28px;
-  background: rgba(255, 251, 247, 0.94);
-  box-shadow: 0 18px 45px rgba(98, 49, 34, 0.14);
+  margin: auto 0;
+  padding: 28px 20px 22px;
+  border-radius: 32px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 251, 247, 0.97)),
+    rgba(255, 251, 247, 0.94);
+  border: 1px solid rgba(240, 206, 193, 0.9);
+  box-shadow: 0 24px 50px rgba(98, 49, 34, 0.14);
+  backdrop-filter: blur(18px);
 }
 
 .eyebrow {
   margin: 0 0 10px;
   color: #a94f31;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 h1 {
   margin: 0;
   color: #35231a;
+  font-size: clamp(1.9rem, 7vw, 2.4rem);
+  line-height: 1.08;
 }
 
 .description {
@@ -328,7 +335,7 @@ h1 {
 
 .status-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 14px;
 }
 
@@ -336,8 +343,8 @@ h1 {
 .image-item {
   margin-top: 14px;
   padding: 16px;
-  border-radius: 16px;
-  background: #fff;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
   border: 1px solid #efd5ca;
 }
 
@@ -407,10 +414,10 @@ label {
 input,
 select {
   border: 1px solid #e6c1b4;
-  border-radius: 14px;
-  padding: 14px 16px;
-  font-size: 15px;
-  background: #fff;
+  border-radius: 18px;
+  padding: 15px 16px;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.94);
 }
 
 .checkbox-row {
@@ -422,15 +429,15 @@ select {
 .primary-button,
 .secondary-button {
   border: none;
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 18px;
+  padding: 15px 16px;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
 }
 
 .primary-button {
-  background: #cd6d2d;
+  background: linear-gradient(135deg, #cd6d2d 0%, #ec9456 100%);
   color: #fff;
 }
 
@@ -484,13 +491,24 @@ select {
   margin-top: 20px;
   display: flex;
   gap: 12px;
+  flex-direction: column;
 }
 
-@media (max-width: 640px) {
-  .helper-row,
+@media (min-width: 768px) {
+  .review-page {
+    padding: 28px;
+  }
+
+  .review-card {
+    padding: 36px 34px 30px;
+  }
+
   .status-grid {
-    grid-template-columns: 1fr;
-    flex-direction: column;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .helper-row {
+    flex-direction: row;
   }
 }
 </style>

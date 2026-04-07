@@ -113,47 +113,60 @@ const confirmReset = async () => {
 <style scoped>
 .auth-page {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: linear-gradient(135deg, #fff8eb 0%, #ffd9bc 45%, #ffc9ae 100%);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+  background: transparent;
 }
 
 .auth-card {
   width: min(100%, 480px);
-  padding: 32px;
-  border-radius: 24px;
-  background: rgba(255, 252, 247, 0.94);
-  box-shadow: 0 18px 45px rgba(109, 70, 36, 0.14);
+  min-height: min(860px, calc(100vh - 36px));
+  margin: auto 0;
+  padding: 28px 22px 24px;
+  border-radius: 32px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 251, 247, 0.97)),
+    rgba(255, 252, 247, 0.94);
+  border: 1px solid rgba(240, 210, 193, 0.92);
+  box-shadow:
+    0 26px 52px rgba(109, 70, 36, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(18px);
 }
 
 .eyebrow {
   margin: 0 0 10px;
   color: #b35a28;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 h1 {
   margin: 0;
   color: #35231a;
+  font-size: clamp(1.9rem, 7vw, 2.4rem);
+  line-height: 1.08;
 }
 
 .description {
   margin: 12px 0 24px;
   color: #6a5246;
-  line-height: 1.5;
+  line-height: 1.62;
 }
 
 .auth-form {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .confirm-form {
-  margin-top: 24px;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(236, 206, 193, 0.9);
 }
 
 label {
@@ -165,30 +178,32 @@ label {
 
 input {
   border: 1px solid #ebc7a9;
-  border-radius: 14px;
-  padding: 14px 16px;
-  font-size: 15px;
-  background: #fff;
+  border-radius: 18px;
+  padding: 15px 16px;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: inset 0 1px 2px rgba(77, 56, 45, 0.04);
 }
 
 .primary-button,
 .secondary-button {
   width: 100%;
   border: none;
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 18px;
+  padding: 15px 16px;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
 }
 
 .primary-button {
-  background: #cd6d2d;
+  background: linear-gradient(135deg, #cd6d2d 0%, #ec9456 100%);
   color: #fff;
+  box-shadow: 0 16px 28px rgba(205, 109, 45, 0.24);
 }
 
 .secondary-button {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.92);
   color: #57372d;
   border: 1px solid #ebc7a9;
 }
@@ -207,9 +222,9 @@ input {
 
 .token-box {
   margin-top: 14px;
-  padding: 14px;
-  border-radius: 14px;
-  background: #fff6ed;
+  padding: 16px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fff6ed 0%, #fff2e8 100%);
   border: 1px solid #efd6c1;
 }
 
@@ -226,12 +241,31 @@ input {
 }
 
 .helper-text {
-  margin-top: 20px;
+  margin-top: auto;
   color: #6a5246;
+  text-align: center;
 }
 
 .helper-text a {
   color: #a3461a;
   font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .auth-page {
+    padding: 28px;
+  }
+
+  .auth-card {
+    min-height: auto;
+    padding: 36px 34px 28px;
+  }
+}
+
+@media (max-width: 420px) {
+  .auth-card {
+    border-radius: 28px;
+    padding: 24px 18px 20px;
+  }
 }
 </style>

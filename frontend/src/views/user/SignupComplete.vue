@@ -54,32 +54,39 @@ const logout = () => {
 <style scoped>
 .complete-page {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: linear-gradient(135deg, #fff7e7 0%, #ffd9b7 50%, #ffc9aa 100%);
+  display: flex;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+  background: transparent;
 }
 
 .complete-card {
   width: min(100%, 560px);
-  padding: 34px;
-  border-radius: 28px;
-  background: rgba(255, 251, 247, 0.95);
-  box-shadow: 0 18px 42px rgba(109, 70, 36, 0.14);
+  margin: auto 0;
+  padding: 30px 22px 24px;
+  border-radius: 32px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 251, 247, 0.97)),
+    rgba(255, 251, 247, 0.95);
+  border: 1px solid rgba(240, 210, 193, 0.92);
+  box-shadow: 0 24px 50px rgba(109, 70, 36, 0.14);
+  backdrop-filter: blur(18px);
 }
 
 .eyebrow {
   margin: 0 0 10px;
   color: #b35a28;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 h1 {
   margin: 0;
   color: #35231a;
+  font-size: clamp(2rem, 7vw, 2.5rem);
+  line-height: 1.08;
 }
 
 .description {
@@ -90,8 +97,8 @@ h1 {
 
 .summary-box {
   padding: 16px;
-  border-radius: 16px;
-  background: #fff7ed;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fff7ed 0%, #fff3ea 100%);
   border: 1px solid #f0d8c4;
   color: #6a5246;
 }
@@ -111,21 +118,22 @@ h1 {
   margin-top: 20px;
   display: flex;
   gap: 12px;
+  flex-direction: column;
 }
 
 .primary-button,
 .secondary-button {
   flex: 1;
   border: none;
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 18px;
+  padding: 15px 16px;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
 }
 
 .primary-button {
-  background: #cd6d2d;
+  background: linear-gradient(135deg, #cd6d2d 0%, #ec9456 100%);
   color: #fff;
 }
 
@@ -135,9 +143,17 @@ h1 {
   border: 1px solid #e6c1b4;
 }
 
-@media (max-width: 640px) {
+@media (min-width: 768px) {
+  .complete-page {
+    padding: 28px;
+  }
+
+  .complete-card {
+    padding: 36px 34px 30px;
+  }
+
   .action-row {
-    flex-direction: column;
+    flex-direction: row;
   }
 }
 </style>

@@ -29,17 +29,26 @@ onMounted(() => {
 <style scoped>
 .status-page {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, #fff4ea 0%, #ffd9cb 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+  background: transparent;
 }
 
 .status-card {
-  padding: 28px 32px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.92);
+  width: min(100%, 420px);
+  padding: 28px 24px;
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 251, 247, 0.97)),
+    rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(240, 206, 193, 0.9);
   color: #4d3129;
   font-size: 18px;
-  box-shadow: 0 16px 40px rgba(104, 58, 42, 0.14);
+  line-height: 1.55;
+  text-align: center;
+  box-shadow: 0 24px 50px rgba(104, 58, 42, 0.14);
+  backdrop-filter: blur(18px);
 }
 </style>

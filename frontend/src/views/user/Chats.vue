@@ -1,10 +1,10 @@
 <template>
   <section class="simple-page">
     <div class="simple-card">
-      <p class="eyebrow">Home</p>
-      <h1>홈</h1>
+      <p class="eyebrow">Chat</p>
+      <h1>채팅</h1>
       <p class="description">
-        메인 홈 화면은 비워두었습니다. 아래 탭에서 오늘의 인연, 채팅, 프로필로 바로 이동할 수 있어요.
+        채팅 화면은 자리만 먼저 만들어두었습니다. 이후 매칭 목록이나 대화방 리스트를 여기 붙이면 됩니다.
       </p>
     </div>
   </section>
