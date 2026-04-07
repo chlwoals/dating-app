@@ -41,6 +41,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AccountReviewPolicyService accountReviewPolicyService;
+    private final FraudDetectionService fraudDetectionService;
 
     // 소개팅 앱 가입 시 계정과 기본 프로필/인증 정보를 함께 만든다.
     @Transactional
@@ -63,7 +64,7 @@ public class AuthService {
             if (hasLocalPassword(existingUser)) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
-                        "이미 가입된 이메일입니다. 로그인하거나 비밀번호 재설정을 이용해주세요."
+                        "이미 가입한 이메일입니다. 로그인하거나 비밀번호 재설정을 이용해주세요."
                 );
             }
 
@@ -71,7 +72,7 @@ public class AuthService {
             existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
             existingUser.setProvider(PROVIDER_BOTH);
             existingUser.setStatus("PENDING_REVIEW");
-            existingUser.setReviewComment("프로필 사진 심사 대기 중입니다. 3일 안에 프로필과 사진 등록을 완료해주세요.");
+            existingUser.setReviewComment("프로필 사진 심사 대기 중입니다. 3일 이내에 프로필과 사진 등록을 완료해주세요.");
             existingUser.setReviewDeadlineAt(accountReviewPolicyService.createSignupDeadline());
             existingUser.setDeletedAt(null);
             clearResetToken(existingUser);
@@ -79,6 +80,7 @@ public class AuthService {
             User linkedUser = userRepository.save(existingUser);
             upsertProfile(linkedUser, request);
             upsertVerification(linkedUser, request);
+            fraudDetectionService.evaluateUserProfile(linkedUser.getId());
             return new AuthResponse(jwtUtil.createToken(linkedUser.getEmail()), UserResponse.from(linkedUser));
         }
 
@@ -87,7 +89,7 @@ public class AuthService {
                 .nickname(request.getNickname())
                 .provider(PROVIDER_LOCAL)
                 .status("PENDING_REVIEW")
-                .reviewComment("프로필 사진 심사 대기 중입니다. 3일 안에 프로필과 사진 등록을 완료해주세요.")
+                .reviewComment("프로필 사진 심사 대기 중입니다. 3일 이내에 프로필과 사진 등록을 완료해주세요.")
                 .reviewDeadlineAt(accountReviewPolicyService.createSignupDeadline())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
@@ -95,6 +97,7 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         upsertProfile(savedUser, request);
         upsertVerification(savedUser, request);
+        fraudDetectionService.evaluateUserProfile(savedUser.getId());
         return new AuthResponse(jwtUtil.createToken(savedUser.getEmail()), UserResponse.from(savedUser));
     }
 
@@ -108,11 +111,15 @@ public class AuthService {
                 ));
 
         if ("SUSPENDED".equals(user.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "정지된 계정입니다. 고객센터로 문의해주세요.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "운영 검토가 필요한 계정입니다. 고객센터로 문의해주세요.");
         }
 
         if ("DELETED".equals(user.getStatus())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "기한 내 프로필 또는 사진 등록이 완료되지 않아 계정이 정리되었습니다. 다시 가입해주세요.");
+        }
+
+        if ("HIGH_RISK".equals(user.getFraudReviewStatus())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "위험 활동이 감지되어 계정 이용이 일시 제한되었습니다. 운영 검토 후 다시 안내드릴게요.");
         }
 
         if (!hasLocalPassword(user)) {

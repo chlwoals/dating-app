@@ -4,6 +4,7 @@ import com.dating.backend.dto.AdminMemoRequest;
 import com.dating.backend.dto.AdminRejectRequest;
 import com.dating.backend.dto.AdminReviewCandidateResponse;
 import com.dating.backend.dto.AdminReviewDecisionResponse;
+import com.dating.backend.dto.AdminReviewHistoryResponse;
 import com.dating.backend.dto.AdminReviewSummaryResponse;
 import com.dating.backend.dto.MessageResponse;
 import com.dating.backend.service.AdminReviewService;
@@ -38,10 +39,20 @@ public class AdminReviewController {
     public List<AdminReviewCandidateResponse> getCandidates(
             @RequestHeader("X-Admin-Key") String adminKey,
             @RequestParam(defaultValue = "PENDING_REVIEW") String status,
-            @RequestParam(defaultValue = "false") boolean dueSoonOnly
+            @RequestParam(defaultValue = "false") boolean dueSoonOnly,
+            @RequestParam(defaultValue = "") String q
     ) {
         adminReviewService.validateAdminKey(adminKey);
-        return adminReviewService.getCandidates(status, dueSoonOnly);
+        return adminReviewService.getCandidates(status, dueSoonOnly, q);
+    }
+
+    @GetMapping("/{userId}/history")
+    public List<AdminReviewHistoryResponse> getHistories(
+            @PathVariable Long userId,
+            @RequestHeader("X-Admin-Key") String adminKey
+    ) {
+        adminReviewService.validateAdminKey(adminKey);
+        return adminReviewService.getHistories(userId);
     }
 
     @PutMapping("/{userId}/memo")

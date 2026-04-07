@@ -20,6 +20,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByStatusInAndReviewDeadlineAtBefore(Collection<String> statuses, LocalDateTime reviewDeadlineAt);
 
+    long countByFraudReviewStatus(String fraudReviewStatus);
+
     Optional<User> findByEmail(String email);
 
     Optional<User> findByResetPasswordToken(String resetPasswordToken);
@@ -27,4 +29,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByStatusOrderByCreatedAtAsc(String status);
 
     List<User> findByStatusInAndReviewDeadlineAtBefore(Collection<String> statuses, LocalDateTime reviewDeadlineAt);
+
+    List<User> findByFraudReviewStatusInOrderByFraudRiskScoreDescCreatedAtDesc(Collection<String> fraudReviewStatuses);
 }

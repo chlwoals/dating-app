@@ -46,6 +46,14 @@ public class User {
     @Column(name = "admin_memo", columnDefinition = "TEXT")
     private String adminMemo;
 
+    @Column(name = "fraud_risk_score", nullable = false)
+    @Builder.Default
+    private Integer fraudRiskScore = 0;
+
+    @Column(name = "fraud_review_status", nullable = false, length = 20)
+    @Builder.Default
+    private String fraudReviewStatus = "NORMAL";
+
     // 비밀번호는 해시된 값만 저장하며 users.password_hash 컬럼에 매핑한다.
     @Column(name = "password_hash", length = 255)
     private String password;

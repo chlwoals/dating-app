@@ -39,8 +39,8 @@
 <script setup>
 import { nextTick, reactive, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
-import api from "../api/api";
-import { setToken } from "../utils/auth";
+import api from "../../api/api";
+import { setToken } from "../../utils/auth";
 
 const router = useRouter();
 const loading = ref(false);

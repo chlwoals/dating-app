@@ -26,8 +26,9 @@ public class ProfileService {
     private final UserVerificationRepository userVerificationRepository;
     private final UserProfileImageRepository userProfileImageRepository;
     private final AccountReviewPolicyService accountReviewPolicyService;
+    private final FraudDetectionService fraudDetectionService;
 
-    // 로그인한 사용자의 계정/프로필/인증 정보를 한 번에 반환한다.
+    // 로그인한 사용자의 계정/프로필/인증 정보를 한 번에 조회한다.
     @Transactional(readOnly = true)
     public MyProfileResponse getMyProfile(String email) {
         User user = getUserByEmail(email);
@@ -39,7 +40,7 @@ public class ProfileService {
         return MyProfileResponse.from(user, profile, verification);
     }
 
-    // 내 프로필 수정 화면에서 보낸 값을 users, user_profiles, user_verifications에 반영한다.
+    // 내 프로필 수정 화면의 값을 users, user_profiles, user_verifications에 반영한다.
     @Transactional
     public MyProfileResponse updateMyProfile(String email, UpdateMyProfileRequest request) {
         User user = getUserByEmail(email);
@@ -79,13 +80,14 @@ public class ProfileService {
         } else {
             user.setProfileCompletedAt(null);
             if ("PENDING_REVIEW".equals(user.getStatus()) || "REJECTED".equals(user.getStatus())) {
-                user.setReviewComment("프로필 필수 항목을 모두 입력한 뒤 다시 심사를 진행할 수 있습니다.");
+                user.setReviewComment("프로필 필수 항목을 모두 입력해야 다시 심사를 진행할 수 있습니다.");
             }
         }
 
         userRepository.save(user);
         userProfileRepository.save(profile);
         userVerificationRepository.save(verification);
+        fraudDetectionService.evaluateUserProfile(user.getId());
 
         return MyProfileResponse.from(user, profile, verification);
     }
