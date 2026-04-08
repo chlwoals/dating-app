@@ -1,5 +1,6 @@
 package com.dating.backend.controller;
 
+import com.dating.backend.dto.AdminRiskActionRequest;
 import com.dating.backend.dto.AdminUserReportResponse;
 import com.dating.backend.dto.FraudRiskLogResponse;
 import com.dating.backend.dto.MessageResponse;
@@ -50,6 +51,16 @@ public class AdminSafetyController {
     ) {
         safetyService.validateAdminKey(adminKey);
         return safetyService.getRiskLogs(userId);
+    }
+
+    @PutMapping("/users/{userId}/review")
+    public MessageResponse reviewRiskUser(
+            @RequestHeader("X-Admin-Key") String adminKey,
+            @PathVariable Long userId,
+            @Valid @RequestBody AdminRiskActionRequest request
+    ) {
+        safetyService.validateAdminKey(adminKey);
+        return safetyService.reviewRiskUser(userId, request);
     }
 
     @GetMapping("/reports")

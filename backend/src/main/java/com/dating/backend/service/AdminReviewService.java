@@ -64,16 +64,25 @@ public class AdminReviewService {
         );
     }
 
-    // 상태, 마감 임박 여부, 통합 검색어(q)로 심사 대상을 조회한다.
+    // 상태, 성별, 프로필 완성 여부, 마감 임박 여부를 함께 적용해 심사 대상을 조회한다.
     @Transactional(readOnly = true)
-    public List<AdminReviewCandidateResponse> getCandidates(String status, boolean dueSoonOnly, String query) {
+    public List<AdminReviewCandidateResponse> getCandidates(
+            String status,
+            boolean dueSoonOnly,
+            String query,
+            String gender,
+            boolean profileCompleteOnly
+    ) {
         String normalizedStatus = (status == null || status.isBlank()) ? "PENDING_REVIEW" : status;
         String normalizedQuery = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
+        String normalizedGender = gender == null || gender.isBlank() ? "ALL" : gender.toUpperCase(Locale.ROOT);
         LocalDateTime dueSoonThreshold = LocalDateTime.now().plusDays(1);
 
         return userRepository.findByStatusOrderByCreatedAtAsc(normalizedStatus).stream()
-                .filter(user -> !dueSoonOnly || (user.getReviewDeadlineAt() != null && !user.getReviewDeadlineAt().isAfter(dueSoonThreshold)))
                 .map(this::toCandidateResponse)
+                .filter(candidate -> !dueSoonOnly || (candidate.getReviewDeadlineAt() != null && !candidate.getReviewDeadlineAt().isAfter(dueSoonThreshold)))
+                .filter(candidate -> "ALL".equals(normalizedGender) || normalizedGender.equalsIgnoreCase(candidate.getGender()))
+                .filter(candidate -> !profileCompleteOnly || candidate.isProfileComplete())
                 .filter(candidate -> normalizedQuery.isBlank() || matchesQuery(candidate, normalizedQuery))
                 .toList();
     }
@@ -116,7 +125,7 @@ public class AdminReviewService {
         }
 
         user.setStatus("ACTIVE");
-        user.setReviewComment("프로필 사진 심사가 승인되었습니다.");
+        user.setReviewComment("회원 가입 심사가 승인되었습니다.");
         user.setReviewDeadlineAt(null);
         user.setLastWarningSentAt(null);
         userRepository.save(user);
@@ -168,9 +177,12 @@ public class AdminReviewService {
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),
+                user.getProvider(),
                 user.getStatus(),
                 user.getReviewComment(),
                 user.getAdminMemo(),
+                user.getFraudRiskScore(),
+                user.getFraudReviewStatus(),
                 user.getCreatedAt(),
                 user.getReviewDeadlineAt(),
                 profileComplete,
@@ -180,6 +192,8 @@ public class AdminReviewService {
                 profile.getRegion(),
                 profile.getJob(),
                 profile.getMbti(),
+                profile.getPersonality(),
+                profile.getIdealType(),
                 profile.getIntroduction(),
                 userProfileImageRepository.findByUserIdOrderByImageOrderAsc(user.getId())
                         .stream()
@@ -192,7 +206,8 @@ public class AdminReviewService {
         return contains(candidate.getEmail(), query)
                 || contains(candidate.getNickname(), query)
                 || contains(candidate.getRegion(), query)
-                || contains(candidate.getJob(), query);
+                || contains(candidate.getJob(), query)
+                || contains(candidate.getIntroduction(), query);
     }
 
     private boolean contains(String value, String query) {

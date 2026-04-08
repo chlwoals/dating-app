@@ -40,10 +40,12 @@ public class AdminReviewController {
             @RequestHeader("X-Admin-Key") String adminKey,
             @RequestParam(defaultValue = "PENDING_REVIEW") String status,
             @RequestParam(defaultValue = "false") boolean dueSoonOnly,
-            @RequestParam(defaultValue = "") String q
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "ALL") String gender,
+            @RequestParam(defaultValue = "false") boolean profileCompleteOnly
     ) {
         adminReviewService.validateAdminKey(adminKey);
-        return adminReviewService.getCandidates(status, dueSoonOnly, q);
+        return adminReviewService.getCandidates(status, dueSoonOnly, q, gender, profileCompleteOnly);
     }
 
     @GetMapping("/{userId}/history")

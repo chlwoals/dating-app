@@ -14,9 +14,12 @@ public class AdminReviewCandidateResponse {
     private Long userId;
     private String email;
     private String nickname;
+    private String provider;
     private String status;
     private String reviewComment;
     private String adminMemo;
+    private Integer fraudRiskScore;
+    private String fraudReviewStatus;
     private LocalDateTime createdAt;
     private LocalDateTime reviewDeadlineAt;
     private boolean profileComplete;
@@ -26,6 +29,8 @@ public class AdminReviewCandidateResponse {
     private String region;
     private String job;
     private String mbti;
+    private String personality;
+    private String idealType;
     private String introduction;
     private List<UserProfileImageResponse> images;
 }

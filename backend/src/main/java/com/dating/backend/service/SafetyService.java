@@ -1,5 +1,6 @@
 package com.dating.backend.service;
 
+import com.dating.backend.dto.AdminRiskActionRequest;
 import com.dating.backend.dto.AdminUserReportResponse;
 import com.dating.backend.dto.FraudRiskLogResponse;
 import com.dating.backend.dto.MessageResponse;
@@ -8,6 +9,7 @@ import com.dating.backend.dto.ScamMonitorSummaryResponse;
 import com.dating.backend.dto.ScamMonitorUserResponse;
 import com.dating.backend.dto.UserReportRequest;
 import com.dating.backend.dto.UserReportResponse;
+import com.dating.backend.entity.FraudRiskLog;
 import com.dating.backend.entity.User;
 import com.dating.backend.entity.UserProfile;
 import com.dating.backend.entity.UserReport;
@@ -97,27 +99,33 @@ public class SafetyService {
                     UserProfile profile = userProfileRepository.findByUserId(user.getId()).orElse(null);
                     String latestRiskDetail = fraudRiskLogRepository.findTop20ByUserIdOrderByCreatedAtDesc(user.getId()).stream()
                             .findFirst()
-                            .map(log -> log.getDetail())
+                            .map(FraudRiskLog::getDetail)
                             .orElse("최근 위험 로그가 없습니다.");
 
                     return new ScamMonitorUserResponse(
                             user.getId(),
                             user.getEmail(),
                             user.getNickname(),
+                            user.getProvider(),
                             user.getStatus(),
                             user.getFraudRiskScore(),
                             user.getFraudReviewStatus(),
+                            user.getReviewComment(),
+                            user.getAdminMemo(),
                             profile != null ? profile.getRegion() : null,
                             profile != null ? profile.getJob() : null,
                             userReportRepository.countByReportedUserIdAndStatus(user.getId(), "OPEN"),
-                            latestRiskDetail
+                            latestRiskDetail,
+                            user.getCreatedAt()
                     );
                 })
                 .filter(user -> query.isBlank()
                         || contains(user.getEmail(), query)
                         || contains(user.getNickname(), query)
                         || contains(user.getRegion(), query)
-                        || contains(user.getJob(), query))
+                        || contains(user.getJob(), query)
+                        || contains(user.getReviewComment(), query)
+                        || contains(user.getAdminMemo(), query))
                 .toList();
     }
 
@@ -132,6 +140,62 @@ public class SafetyService {
                         log.getCreatedAt()
                 ))
                 .toList();
+    }
+
+    @Transactional
+    public MessageResponse reviewRiskUser(Long userId, AdminRiskActionRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        String action = request.getAction().toUpperCase(Locale.ROOT);
+        String note = request.getAdminNote();
+
+        switch (action) {
+            case "MARK_NORMAL" -> {
+                user.setFraudReviewStatus("NORMAL");
+                user.setFraudRiskScore(0);
+                if ("SUSPENDED".equals(user.getStatus())) {
+                    user.setStatus("ACTIVE");
+                }
+                user.setReviewComment("운영 검토 후 정상 계정으로 분류되었습니다.");
+            }
+            case "MARK_WATCH" -> {
+                user.setFraudReviewStatus("WATCH");
+                if (user.getFraudRiskScore() < 30) {
+                    user.setFraudRiskScore(30);
+                }
+                if ("SUSPENDED".equals(user.getStatus())) {
+                    user.setStatus("ACTIVE");
+                }
+                user.setReviewComment("운영 검토 후 주의 계정으로 유지됩니다.");
+            }
+            case "SUSPEND_ACCOUNT" -> {
+                user.setStatus("SUSPENDED");
+                if ("NORMAL".equals(user.getFraudReviewStatus())) {
+                    user.setFraudReviewStatus("WATCH");
+                }
+                user.setReviewComment("운영 검토로 인해 계정 이용이 제한되었습니다.");
+            }
+            case "RELEASE_ACCOUNT" -> {
+                user.setStatus("ACTIVE");
+                if ("HIGH_RISK".equals(user.getFraudReviewStatus())) {
+                    user.setFraudReviewStatus("WATCH");
+                }
+                user.setReviewComment("운영 검토 후 계정 이용 제한이 해제되었습니다.");
+            }
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지원하지 않는 처리 액션입니다.");
+        }
+
+        user.setAdminMemo(note);
+        userRepository.save(user);
+        fraudRiskLogRepository.save(FraudRiskLog.builder()
+                .userId(user.getId())
+                .riskType("ADMIN_REVIEW")
+                .score(user.getFraudRiskScore())
+                .detail(note)
+                .build());
+
+        return new MessageResponse("위험 계정 검토 결과를 반영했습니다.");
     }
 
     @Transactional(readOnly = true)
