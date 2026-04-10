@@ -3,7 +3,7 @@
     <div class="auth-card">
       <p class="eyebrow">Dating App</p>
       <h1>로그인</h1>
-      <p class="description">이메일 계정으로 로그인해 서비스를 시작해보세요.</p>
+      <p class="description">이메일 계정으로 로그인해 서비스를 시작해 보세요.</p>
 
       <form class="auth-form" @submit.prevent="login">
         <label>
@@ -30,7 +30,7 @@
 
       <div class="policy-box">
         <strong>안내</strong>
-        <p>심사 대기나 반려 상태의 계정도 로그인 후 사진 업로드 화면에서 다시 심사를 진행할 수 있습니다.</p>
+        <p>사진 심사 대기나 반려 상태 계정은 로그인 후에도 승인 대기 화면에서 계속 보완과 심사 진행 상태를 확인할 수 있습니다.</p>
       </div>
     </div>
   </section>
@@ -40,7 +40,7 @@
 import { nextTick, reactive, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import api from "../../api/api";
-import { setToken } from "../../utils/auth";
+import { clearToken, setToken } from "../../utils/auth";
 
 const router = useRouter();
 const loading = ref(false);
@@ -51,6 +51,25 @@ const form = reactive({
   email: "",
   password: "",
 });
+
+function resolveLoginErrorMessage(error) {
+  const status = error.response?.status;
+  const serverMessage = error.response?.data?.message;
+
+  if (serverMessage) {
+    return serverMessage;
+  }
+
+  if (status === 401) {
+    return "이메일 또는 비밀번호를 다시 확인해 주세요.";
+  }
+
+  if (status === 403) {
+    return "현재 로그인할 수 없는 계정 상태입니다. 운영 정책 또는 심사 상태를 확인해 주세요.";
+  }
+
+  return "로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+}
 
 // 로그인 후 계정 상태에 따라 홈 또는 심사 대기 화면으로 보낸다.
 const login = async () => {
@@ -68,7 +87,8 @@ const login = async () => {
 
     router.push("/review-pending");
   } catch (error) {
-    const message = error.response?.data?.message || "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.";
+    clearToken();
+    const message = resolveLoginErrorMessage(error);
     errorMessage.value = message;
     window.alert(message);
 

@@ -16,8 +16,9 @@ public class ScamMonitorUserResponse {
     private String status;
     private Integer fraudRiskScore;
     private String fraudReviewStatus;
-    private String reviewComment;
     private String adminMemo;
+    private boolean identityBlocked;
+    private String blockedIdentityTypes;
     private String region;
     private String job;
     private long openReportCount;

@@ -3,7 +3,7 @@
     <div class="dashboard-shell">
       <header class="hero-card">
         <div class="hero-copy">
-          <p class="eyebrow">Admin Hub</p>
+          <p class="eyebrow">Admin Dashboard</p>
           <h1>운영 대시보드</h1>
           <p class="sub-copy">가입 심사, 위험 계정, 신고 처리를 상단 카테고리 중심으로 한 화면에서 관리합니다.</p>
         </div>
@@ -40,7 +40,7 @@
       <section :id="sectionIds.review" class="section-card">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Review Queue</p>
+            <p class="eyebrow">Review Center</p>
             <h2>가입 심사</h2>
             <p class="sub-copy">사진, 프로필 완성도, 운영자 메모와 이력을 함께 보고 승인 또는 반려합니다.</p>
           </div>
@@ -170,7 +170,7 @@
       <section :id="sectionIds.risk" class="section-card">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Safety Radar</p>
+            <p class="eyebrow">Safety Center</p>
             <h2>위험 계정</h2>
             <p class="sub-copy">프로필 위험도, 탐지 로그, 계정 제한 상태를 한 번에 보고 바로 재검토합니다.</p>
           </div>
@@ -255,7 +255,7 @@
       <section :id="sectionIds.report" class="section-card">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Reports Desk</p>
+            <p class="eyebrow">Report Desk</p>
             <h2>신고 처리</h2>
             <p class="sub-copy">사용자 신고를 검토하고 운영 메모를 남긴 뒤 처리 완료 상태로 전환합니다.</p>
           </div>
@@ -298,7 +298,7 @@
       <div class="modal-card">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Member Detail</p>
+            <p class="eyebrow">Member Profile</p>
             <h2>{{ selectedCandidate.nickname }} 상세 검토</h2>
           </div>
           <button class="ghost-button compact" @click="selectedCandidate = null">닫기</button>
@@ -337,11 +337,10 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
-import axios from "axios";
+import api from "../../api/api";
 
-const hostname = window.location.hostname || "localhost";
-const baseURL = `http://${hostname}:8080/api`;
-const assetBaseURL = `http://${hostname}:8080`;
+const apiBaseURL = String(api.defaults.baseURL || "");
+const assetBaseURL = apiBaseURL.endsWith("/api") ? apiBaseURL.slice(0, -4) : apiBaseURL;
 const templateStorageKey = "adminRejectTemplates";
 
 const defaultRejectTemplates = {
@@ -417,12 +416,14 @@ const watchCount = computed(() => safetySummary.value?.watchUserCount ?? 0);
 const openReportCount = computed(() => safetySummary.value?.openReportCount ?? 0);
 const resolvedReportCount = computed(() => safetySummary.value?.resolvedReportCount ?? 0);
 
+// Top category cards mirror the three main admin workflows on one page.
 const categoryCards = computed(() => [
   { key: "review", label: "가입 심사", count: `${reviewPendingCount.value}명`, description: "사진과 프로필 심사를 우선 처리합니다.", theme: "warm" },
   { key: "risk", label: "위험 계정", count: `${highRiskCount.value + watchCount.value}명`, description: "스캠 의심 계정을 재검토하고 제한 상태를 관리합니다.", theme: "amber" },
   { key: "report", label: "신고 처리", count: `${openReportCount.value}건`, description: "접수된 사용자 신고를 확인하고 처리 완료로 전환합니다.", theme: "mint" },
 ]);
 
+// Load review, safety, and report data together so the admin page stays in sync.
 const loadDashboard = async () => {
   loading.value = true;
   message.value = "";
@@ -431,8 +432,8 @@ const loadDashboard = async () => {
   try {
     persistAdminKey();
     const [reviewSummaryRes, candidatesRes, safetySummaryRes, usersRes, reportsRes] = await Promise.all([
-      axios.get(`${baseURL}/admin/reviews/summary`, { headers: getHeaders() }),
-      axios.get(`${baseURL}/admin/reviews`, {
+      api.get(`/admin/reviews/summary`, { headers: getHeaders() }),
+      api.get(`/admin/reviews`, {
         headers: getHeaders(),
         params: {
           status: statusFilter.value,
@@ -442,9 +443,9 @@ const loadDashboard = async () => {
           profileCompleteOnly: profileCompleteOnly.value,
         },
       }),
-      axios.get(`${baseURL}/admin/safety/summary`, { headers: getHeaders() }),
-      axios.get(`${baseURL}/admin/safety/users`, { headers: getHeaders(), params: { riskStatus: riskStatus.value, q: riskSearchKeyword.value } }),
-      axios.get(`${baseURL}/admin/safety/reports`, { headers: getHeaders(), params: { status: reportStatus.value } }),
+      api.get(`/admin/safety/summary`, { headers: getHeaders() }),
+      api.get(`/admin/safety/users`, { headers: getHeaders(), params: { riskStatus: riskStatus.value, q: riskSearchKeyword.value } }),
+      api.get(`/admin/safety/reports`, { headers: getHeaders(), params: { status: reportStatus.value } }),
     ]);
 
     reviewSummary.value = reviewSummaryRes.data;
@@ -483,7 +484,7 @@ const toggleHistory = async (userId) => {
 
   historyLoading.value = true;
   try {
-    const { data } = await axios.get(`${baseURL}/admin/reviews/${userId}/history`, { headers: getHeaders() });
+    const { data } = await api.get(`/admin/reviews/${userId}/history`, { headers: getHeaders() });
     histories.value = { ...histories.value, [userId]: data };
   } catch (error) {
     errorMessage.value = error.response?.data?.message || "처리 이력을 불러오지 못했습니다.";
@@ -494,7 +495,7 @@ const toggleHistory = async (userId) => {
 
 const approveCandidate = async (userId) => {
   try {
-    const { data } = await axios.post(`${baseURL}/admin/reviews/${userId}/approve`, null, { headers: getHeaders() });
+    const { data } = await api.post(`/admin/reviews/${userId}/approve`, null, { headers: getHeaders() });
     message.value = data.message;
     await loadDashboard();
   } catch (error) {
@@ -510,7 +511,7 @@ const rejectCandidate = async (userId) => {
   }
 
   try {
-    const { data } = await axios.post(`${baseURL}/admin/reviews/${userId}/reject`, { reviewComment }, { headers: getHeaders() });
+    const { data } = await api.post(`/admin/reviews/${userId}/reject`, { reviewComment }, { headers: getHeaders() });
     message.value = data.message;
     await loadDashboard();
   } catch (error) {
@@ -526,7 +527,7 @@ const saveMemo = async (userId) => {
   }
 
   try {
-    const { data } = await axios.put(`${baseURL}/admin/reviews/${userId}/memo`, { adminMemo }, { headers: getHeaders() });
+    const { data } = await api.put(`/admin/reviews/${userId}/memo`, { adminMemo }, { headers: getHeaders() });
     message.value = data.message;
     await loadDashboard();
   } catch (error) {
@@ -558,7 +559,7 @@ const toggleLogs = async (userId) => {
   if (riskLogs.value[userId]) return;
 
   try {
-    const { data } = await axios.get(`${baseURL}/admin/safety/users/${userId}/logs`, { headers: getHeaders() });
+    const { data } = await api.get(`/admin/safety/users/${userId}/logs`, { headers: getHeaders() });
     riskLogs.value = { ...riskLogs.value, [userId]: data };
   } catch (error) {
     errorMessage.value = error.response?.data?.message || "위험 로그를 불러오지 못했습니다.";
@@ -573,7 +574,7 @@ const reviewRiskUser = async (userId, action) => {
   }
 
   try {
-    const { data } = await axios.put(`${baseURL}/admin/safety/users/${userId}/review`, { action, adminNote }, { headers: getHeaders() });
+    const { data } = await api.put(`/admin/safety/users/${userId}/review`, { action, adminNote }, { headers: getHeaders() });
     message.value = data.message;
     await loadDashboard();
   } catch (error) {
@@ -589,7 +590,7 @@ const resolveReport = async (reportId) => {
   }
 
   try {
-    const { data } = await axios.put(`${baseURL}/admin/safety/reports/${reportId}/resolve`, { adminNote }, { headers: getHeaders() });
+    const { data } = await api.put(`/admin/safety/reports/${reportId}/resolve`, { adminNote }, { headers: getHeaders() });
     message.value = data.message;
     await loadDashboard();
   } catch (error) {

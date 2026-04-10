@@ -1,9 +1,3 @@
-> Task :compileJava UP-TO-DATE
-> Task :processResources UP-TO-DATE
-> Task :classes UP-TO-DATE
-> Task :resolveMainClassName
-
-> Task :bootRun
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -14,21 +8,21 @@
 
  :: Spring Boot ::                (v4.0.5)
 
-2026-04-05T16:01:27.501+09:00  INFO 27828 --- [           main] com.dating.backend.BackendApplication    : Starting BackendApplication using Java 17.0.12 with PID 27828 (C:\workspace\dating-app\backend\build\classes\java\main started by chlwo in C:\workspace\dating-app\backend)
-2026-04-05T16:01:27.504+09:00  INFO 27828 --- [           main] com.dating.backend.BackendApplication    : No active profile set, falling back to 1 default profile: "default"
-2026-04-05T16:01:28.154+09:00  INFO 27828 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-04-05T16:01:28.224+09:00  INFO 27828 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 63 ms. Found 4 JPA repository interfaces.
-2026-04-05T16:01:28.880+09:00  INFO 27828 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8082 (http)
-2026-04-05T16:01:28.896+09:00  INFO 27828 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-04-05T16:01:28.896+09:00  INFO 27828 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.20]
-2026-04-05T16:01:28.977+09:00  INFO 27828 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1425 ms
-2026-04-05T16:01:29.142+09:00  INFO 27828 --- [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
-2026-04-05T16:01:29.202+09:00  INFO 27828 --- [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.7.Final
-2026-04-05T16:01:29.687+09:00  INFO 27828 --- [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-04-05T16:01:29.723+09:00  INFO 27828 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-04-05T16:01:29.800+09:00  INFO 27828 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.mariadb.jdbc.Connection@4fa8297b
-2026-04-05T16:01:29.803+09:00  INFO 27828 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-04-05T16:01:29.865+09:00  INFO 27828 --- [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+2026-04-09T18:06:09.759+09:00  INFO 14188 --- [           main] com.dating.backend.BackendApplication    : Starting BackendApplication v0.0.1-SNAPSHOT using Java 17.0.12 with PID 14188 (C:\workspace\dating-app\backend\build\libs\backend-0.0.1-SNAPSHOT.jar started by chlwo in C:\workspace\dating-app)
+2026-04-09T18:06:09.764+09:00  INFO 14188 --- [           main] com.dating.backend.BackendApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-04-09T18:06:11.029+09:00  INFO 14188 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-09T18:06:11.135+09:00  INFO 14188 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 91 ms. Found 8 JPA repository interfaces.
+2026-04-09T18:06:12.092+09:00  INFO 14188 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8082 (http)
+2026-04-09T18:06:12.107+09:00  INFO 14188 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-09T18:06:12.108+09:00  INFO 14188 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.20]
+2026-04-09T18:06:12.164+09:00  INFO 14188 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 2297 ms
+2026-04-09T18:06:12.507+09:00  INFO 14188 --- [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-04-09T18:06:12.658+09:00  INFO 14188 --- [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.7.Final
+2026-04-09T18:06:13.486+09:00  INFO 14188 --- [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-09T18:06:13.527+09:00  INFO 14188 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-09T18:06:13.620+09:00  INFO 14188 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.mariadb.jdbc.Connection@16d61071
+2026-04-09T18:06:13.622+09:00  INFO 14188 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-09T18:06:13.706+09:00  INFO 14188 --- [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
 	Database JDBC URL [jdbc:mariadb://127.0.0.1/dating_db?user=root&password=***]
 	Database driver: MariaDB Connector/J
 	Database dialect: MariaDBDialect
@@ -40,39 +34,116 @@
 	Pool: DataSourceConnectionProvider
 	Minimum pool size: undefined/unknown
 	Maximum pool size: undefined/unknown
-2026-04-05T16:01:30.893+09:00  INFO 27828 --- [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-04-05T16:01:30.950+09:00  INFO 27828 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-04-05T16:01:31.019+09:00  INFO 27828 --- [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
-2026-04-05T16:01:31.280+09:00  WARN 27828 --- [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-04-05T16:01:31.982+09:00  WARN 27828 --- [           main] o.s.w.s.resource.ResourceHandlerUtils    : Appended trailing slash to static resource location: file:///C:/workspace/dating-app/backend/uploads/
-2026-04-05T16:01:32.331+09:00  INFO 27828 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8082 (http) with context path '/'
-2026-04-05T16:01:32.340+09:00  INFO 27828 --- [           main] com.dating.backend.BackendApplication    : Started BackendApplication in 5.304 seconds (process running for 5.768)
-2026-04-05T16:01:48.087+09:00  INFO 27828 --- [nio-8082-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-04-05T16:01:48.088+09:00  INFO 27828 --- [nio-8082-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-04-05T16:01:48.090+09:00  INFO 27828 --- [nio-8082-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-04-09T18:06:16.511+09:00  INFO 14188 --- [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-09T18:06:16.690+09:00  INFO 14188 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-09T18:06:16.984+09:00  INFO 14188 --- [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-04-09T18:06:18.654+09:00  WARN 14188 --- [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-09T18:06:20.931+09:00  WARN 14188 --- [           main] o.s.w.s.resource.ResourceHandlerUtils    : Appended trailing slash to static resource location: file:///C:/workspace/dating-app/uploads/
+2026-04-09T18:06:21.755+09:00  INFO 14188 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8082 (http) with context path '/'
+2026-04-09T18:06:21.815+09:00  INFO 14188 --- [           main] com.dating.backend.BackendApplication    : Started BackendApplication in 12.848 seconds (process running for 13.771)
+2026-04-09T18:07:40.956+09:00  INFO 14188 --- [nio-8082-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-09T18:07:40.957+09:00  INFO 14188 --- [nio-8082-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-09T18:07:40.962+09:00  INFO 14188 --- [nio-8082-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 4 ms
 Hibernate: 
     select
         u1_0.id,
+        u1_0.admin_memo,
         u1_0.created_at,
+        u1_0.deleted_at,
         u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
         u1_0.nickname,
-        u1_0.password,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
         u1_0.provider,
         u1_0.reset_password_token,
         u1_0.reset_password_token_expires_at,
         u1_0.review_comment,
-        u1_0.status 
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
     from
         users u1_0 
     where
         u1_0.email=?
 Hibernate: 
-    insert 
-    into
-        users
-        (created_at, email, nickname, password, provider, reset_password_token, reset_password_token_expires_at, review_comment, status) 
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    select
+        u1_0.id,
+        u1_0.admin_memo,
+        u1_0.created_at,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
+        u1_0.nickname,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
+        u1_0.provider,
+        u1_0.reset_password_token,
+        u1_0.reset_password_token_expires_at,
+        u1_0.review_comment,
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.admin_memo,
+        u1_0.created_at,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
+        u1_0.nickname,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
+        u1_0.provider,
+        u1_0.reset_password_token,
+        u1_0.reset_password_token_expires_at,
+        u1_0.review_comment,
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.admin_memo,
+        u1_0.created_at,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
+        u1_0.nickname,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
+        u1_0.provider,
+        u1_0.reset_password_token,
+        u1_0.reset_password_token_expires_at,
+        u1_0.review_comment,
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
 Hibernate: 
     select
         up1_0.id,
@@ -93,13 +164,6 @@ Hibernate:
     where
         up1_0.user_id=?
 Hibernate: 
-    insert 
-    into
-        user_profiles
-        (created_at, drinking_status, ideal_type, introduction, job, mbti, personality, region, religion, smoking_status, updated_at, user_id) 
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-Hibernate: 
     select
         uv1_0.id,
         uv1_0.birth_date,
@@ -114,281 +178,94 @@ Hibernate:
     where
         uv1_0.user_id=?
 Hibernate: 
-    insert 
-    into
-        user_verifications
-        (birth_date, created_at, gender, is_verified, updated_at, user_id, verified_at) 
-    values
-        (?, ?, ?, ?, ?, ?, ?)
+    select
+        upi1_0.id,
+        upi1_0.created_at,
+        upi1_0.image_order,
+        upi1_0.image_url,
+        upi1_0.is_main,
+        upi1_0.user_id 
+    from
+        user_profile_images upi1_0 
+    where
+        upi1_0.user_id=? 
+    order by
+        upi1_0.image_order
 Hibernate: 
     select
         u1_0.id,
+        u1_0.admin_memo,
         u1_0.created_at,
+        u1_0.deleted_at,
         u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
         u1_0.nickname,
-        u1_0.password,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
         u1_0.provider,
         u1_0.reset_password_token,
         u1_0.reset_password_token_expires_at,
         u1_0.review_comment,
-        u1_0.status 
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
     from
         users u1_0 
     where
         u1_0.email=?
 Hibernate: 
-    insert 
-    into
-        users
-        (created_at, email, nickname, password, provider, reset_password_token, reset_password_token_expires_at, review_comment, status) 
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?)
-2026-04-05T16:02:02.141+09:00  WARN 27828 --- [nio-8082-exec-3] o.m.jdbc.message.server.ErrorPacket      : Error: 1062-23000: Duplicate entry 'uploadtest' for key 'uk_users_nickname'
-2026-04-05T16:02:02.143+09:00  WARN 27828 --- [nio-8082-exec-3] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 1062, SQLState: 23000
-2026-04-05T16:02:02.143+09:00  WARN 27828 --- [nio-8082-exec-3] org.hibernate.orm.jdbc.error             : (conn=117) Duplicate entry 'uploadtest' for key 'uk_users_nickname'
-2026-04-05T16:02:02.154+09:00 ERROR 27828 --- [nio-8082-exec-3] c.d.b.controller.GlobalExceptionHandler  : Unhandled server error
-
-org.springframework.dao.DataIntegrityViolationException: could not execute statement [(conn=117) Duplicate entry 'uploadtest' for key 'uk_users_nickname'] [insert into users (created_at,email,nickname,password,provider,reset_password_token,reset_password_token_expires_at,review_comment,status) values (?,?,?,?,?,?,?,?,?)]; SQL [insert into users (created_at,email,nickname,password,provider,reset_password_token,reset_password_token_expires_at,review_comment,status) values (?,?,?,?,?,?,?,?,?)]; constraint [uk_users_nickname]
-	at org.springframework.orm.jpa.hibernate.HibernateExceptionTranslator.convertHibernateAccessException(HibernateExceptionTranslator.java:169) ~[spring-orm-7.0.6.jar:7.0.6]
-	at org.springframework.orm.jpa.hibernate.HibernateExceptionTranslator.convertHibernateAccessException(HibernateExceptionTranslator.java:131) ~[spring-orm-7.0.6.jar:7.0.6]
-	at org.springframework.orm.jpa.hibernate.HibernateExceptionTranslator.translateExceptionIfPossible(HibernateExceptionTranslator.java:105) ~[spring-orm-7.0.6.jar:7.0.6]
-	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:223) ~[spring-orm-7.0.6.jar:7.0.6]
-	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.translateExceptionIfPossible(AbstractEntityManagerFactoryBean.java:576) ~[spring-orm-7.0.6.jar:7.0.6]
-	at org.springframework.dao.support.ChainedPersistenceExceptionTranslator.translateExceptionIfPossible(ChainedPersistenceExceptionTranslator.java:61) ~[spring-tx-7.0.6.jar:7.0.6]
-	at org.springframework.dao.support.DataAccessUtils.translateIfNecessary(DataAccessUtils.java:346) ~[spring-tx-7.0.6.jar:7.0.6]
-	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:157) ~[spring-tx-7.0.6.jar:7.0.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:166) ~[spring-data-jpa-4.0.4.jar:4.0.4]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:222) ~[spring-aop-7.0.6.jar:7.0.6]
-	at jdk.proxy2/jdk.proxy2.$Proxy132.save(Unknown Source) ~[na:na]
-	at com.dating.backend.service.AuthService.signup(AuthService.java:71) ~[main/:na]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
-	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:133) ~[spring-tx-7.0.6.jar:7.0.6]
-	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:371) ~[spring-tx-7.0.6.jar:7.0.6]
-	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:130) ~[spring-tx-7.0.6.jar:7.0.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.6.jar:7.0.6]
-	at com.dating.backend.service.AuthService$$SpringCGLIB$$0.signup(<generated>) ~[main/:na]
-	at com.dating.backend.controller.AuthController.signup(AuthController.java:28) ~[main/:na]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
-	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:252) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:184) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117) ~[spring-webmvc-7.0.6.jar:7.0.6]
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934) ~[spring-webmvc-7.0.6.jar:7.0.6]
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853) ~[spring-webmvc-7.0.6.jar:7.0.6]
-	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86) ~[spring-webmvc-7.0.6.jar:7.0.6]
-	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963) ~[spring-webmvc-7.0.6.jar:7.0.6]
-	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866) ~[spring-webmvc-7.0.6.jar:7.0.6]
-	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1000) ~[spring-webmvc-7.0.6.jar:7.0.6]
-	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:903) ~[spring-webmvc-7.0.6.jar:7.0.6]
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:649) ~[tomcat-embed-core-11.0.20.jar:6.1]
-	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874) ~[spring-webmvc-7.0.6.jar:7.0.6]
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710) ~[tomcat-embed-core-11.0.20.jar:6.1]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53) ~[tomcat-embed-websocket-11.0.20.jar:11.0.20]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:235) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:371) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:101) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:132) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:86) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:181) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.authentication.ui.DefaultLogoutPageGeneratingFilter.doFilterInternal(DefaultLogoutPageGeneratingFilter.java:60) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.authentication.ui.DefaultLoginPageGeneratingFilter.doFilter(DefaultLoginPageGeneratingFilter.java:246) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.authentication.ui.DefaultLoginPageGeneratingFilter.doFilter(DefaultLoginPageGeneratingFilter.java:232) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.authentication.ui.DefaultResourcesFilter.doFilter(DefaultResourcesFilter.java:73) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at com.dating.backend.config.JwtFilter.doFilterInternal(JwtFilter.java:47) ~[main/:na]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter.doFilter(AbstractAuthenticationProcessingFilter.java:245) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter.doFilter(AbstractAuthenticationProcessingFilter.java:239) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter.doFilterInternal(OAuth2AuthorizationRequestRedirectFilter.java:195) ~[spring-security-oauth2-client-7.0.4.jar:7.0.4]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:110) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:96) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:237) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:195) ~[spring-security-web-7.0.4.jar:7.0.4]
-	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:317) ~[spring-security-config-7.0.4.jar:7.0.4]
-	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:355) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:272) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:492) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1779) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
-	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
-Caused by: org.hibernate.exception.ConstraintViolationException: could not execute statement [(conn=117) Duplicate entry 'uploadtest' for key 'uk_users_nickname'] [insert into users (created_at,email,nickname,password,provider,reset_password_token,reset_password_token_expires_at,review_comment,status) values (?,?,?,?,?,?,?,?,?)]
-	at org.hibernate.dialect.MariaDBDialect.lambda$buildSQLExceptionConversionDelegate$0(MariaDBDialect.java:371) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:34) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:115) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:184) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.id.insert.GetGeneratedKeysDelegate.performMutation(GetGeneratedKeysDelegate.java:103) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.engine.jdbc.mutation.internal.MutationExecutorSingleNonBatched.performNonBatchedOperations(MutationExecutorSingleNonBatched.java:45) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.engine.jdbc.mutation.internal.AbstractMutationExecutor.execute(AbstractMutationExecutor.java:66) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.engine.jdbc.mutation.internal.AbstractMutationExecutor.execute(AbstractMutationExecutor.java:55) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.doStaticInserts(InsertCoordinatorStandard.java:180) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.coordinateInsert(InsertCoordinatorStandard.java:120) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.insert(InsertCoordinatorStandard.java:84) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:85) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:667) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:291) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:270) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:322) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:371) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:285) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:215) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:133) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.event.internal.DefaultPersistEventListener.entityIsTransient(DefaultPersistEventListener.java:144) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.event.internal.DefaultPersistEventListener.persist(DefaultPersistEventListener.java:90) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:74) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:50) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:138) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.internal.SessionImpl.firePersist(SessionImpl.java:692) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at org.hibernate.internal.SessionImpl.persist(SessionImpl.java:675) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
-	at org.springframework.orm.jpa.ExtendedEntityManagerCreator$ExtendedEntityManagerInvocationHandler.invoke(ExtendedEntityManagerCreator.java:362) ~[spring-orm-7.0.6.jar:7.0.6]
-	at jdk.proxy2/jdk.proxy2.$Proxy125.persist(Unknown Source) ~[na:na]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
-	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityHandlerInvocationHandler.invokeMethod(SharedEntityManagerCreator.java:240) ~[spring-orm-7.0.6.jar:7.0.6]
-	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:386) ~[spring-orm-7.0.6.jar:7.0.6]
-	at jdk.proxy2/jdk.proxy2.$Proxy125.persist(Unknown Source) ~[na:na]
-	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:664) ~[spring-data-jpa-4.0.4.jar:4.0.4]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
-	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:278) ~[spring-data-commons-4.0.4.jar:4.0.4]
-	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:169) ~[spring-data-commons-4.0.4.jar:4.0.4]
-	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158) ~[spring-data-commons-4.0.4.jar:4.0.4]
-	at org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:545) ~[spring-data-commons-4.0.4.jar:4.0.4]
-	at org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:290) ~[spring-data-commons-4.0.4.jar:4.0.4]
-	at org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:690) ~[spring-data-commons-4.0.4.jar:4.0.4]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:171) ~[spring-data-commons-4.0.4.jar:4.0.4]
-	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:146) ~[spring-data-commons-4.0.4.jar:4.0.4]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:69) ~[spring-data-commons-4.0.4.jar:4.0.4]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:133) ~[spring-tx-7.0.6.jar:7.0.6]
-	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:371) ~[spring-tx-7.0.6.jar:7.0.6]
-	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:130) ~[spring-tx-7.0.6.jar:7.0.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
-	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:135) ~[spring-tx-7.0.6.jar:7.0.6]
-	... 128 common frames omitted
-Caused by: java.sql.SQLIntegrityConstraintViolationException: (conn=117) Duplicate entry 'uploadtest' for key 'uk_users_nickname'
-	at org.mariadb.jdbc.export.ExceptionFactory.createException(ExceptionFactory.java:318) ~[mariadb-java-client-3.5.7.jar:na]
-	at org.mariadb.jdbc.export.ExceptionFactory.create(ExceptionFactory.java:403) ~[mariadb-java-client-3.5.7.jar:na]
-	at org.mariadb.jdbc.message.ClientMessage.readPacket(ClientMessage.java:196) ~[mariadb-java-client-3.5.7.jar:na]
-	at org.mariadb.jdbc.client.impl.StandardClient.readPacket(StandardClient.java:1411) ~[mariadb-java-client-3.5.7.jar:na]
-	at org.mariadb.jdbc.client.impl.StandardClient.readResults(StandardClient.java:1350) ~[mariadb-java-client-3.5.7.jar:na]
-	at org.mariadb.jdbc.client.impl.StandardClient.readResponse(StandardClient.java:1269) ~[mariadb-java-client-3.5.7.jar:na]
-	at org.mariadb.jdbc.client.impl.StandardClient.execute(StandardClient.java:1193) ~[mariadb-java-client-3.5.7.jar:na]
-	at org.mariadb.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:91) ~[mariadb-java-client-3.5.7.jar:na]
-	at org.mariadb.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:345) ~[mariadb-java-client-3.5.7.jar:na]
-	at org.mariadb.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:322) ~[mariadb-java-client-3.5.7.jar:na]
-	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61) ~[HikariCP-7.0.2.jar:na]
-	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java) ~[HikariCP-7.0.2.jar:na]
-	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:181) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
-	... 187 common frames omitted
-
-Hibernate: 
     select
         u1_0.id,
+        u1_0.admin_memo,
         u1_0.created_at,
+        u1_0.deleted_at,
         u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
         u1_0.nickname,
-        u1_0.password,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
         u1_0.provider,
         u1_0.reset_password_token,
         u1_0.reset_password_token_expires_at,
         u1_0.review_comment,
-        u1_0.status 
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
     from
         users u1_0 
     where
         u1_0.email=?
 Hibernate: 
-    insert 
-    into
-        users
-        (created_at, email, nickname, password, provider, reset_password_token, reset_password_token_expires_at, review_comment, status) 
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    select
+        u1_0.id,
+        u1_0.admin_memo,
+        u1_0.created_at,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
+        u1_0.nickname,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
+        u1_0.provider,
+        u1_0.reset_password_token,
+        u1_0.reset_password_token_expires_at,
+        u1_0.review_comment,
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
 Hibernate: 
     select
         up1_0.id,
@@ -409,12 +286,19 @@ Hibernate:
     where
         up1_0.user_id=?
 Hibernate: 
-    insert 
-    into
-        user_profiles
-        (created_at, drinking_status, ideal_type, introduction, job, mbti, personality, region, religion, smoking_status, updated_at, user_id) 
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    select
+        upi1_0.id,
+        upi1_0.created_at,
+        upi1_0.image_order,
+        upi1_0.image_url,
+        upi1_0.is_main,
+        upi1_0.user_id 
+    from
+        user_profile_images upi1_0 
+    where
+        upi1_0.user_id=? 
+    order by
+        upi1_0.image_order
 Hibernate: 
     select
         uv1_0.id,
@@ -430,24 +314,26 @@ Hibernate:
     where
         uv1_0.user_id=?
 Hibernate: 
-    insert 
-    into
-        user_verifications
-        (birth_date, created_at, gender, is_verified, updated_at, user_id, verified_at) 
-    values
-        (?, ?, ?, ?, ?, ?, ?)
-Hibernate: 
     select
         u1_0.id,
+        u1_0.admin_memo,
         u1_0.created_at,
+        u1_0.deleted_at,
         u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
         u1_0.nickname,
-        u1_0.password,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
         u1_0.provider,
         u1_0.reset_password_token,
         u1_0.reset_password_token_expires_at,
         u1_0.review_comment,
-        u1_0.status 
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
     from
         users u1_0 
     where
@@ -455,86 +341,24 @@ Hibernate:
 Hibernate: 
     select
         u1_0.id,
+        u1_0.admin_memo,
         u1_0.created_at,
+        u1_0.deleted_at,
         u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
         u1_0.nickname,
-        u1_0.password,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
         u1_0.provider,
         u1_0.reset_password_token,
         u1_0.reset_password_token_expires_at,
         u1_0.review_comment,
-        u1_0.status 
-    from
-        users u1_0 
-    where
-        u1_0.email=?
-Hibernate: 
-    select
-        count(upi1_0.id) 
-    from
-        user_profile_images upi1_0 
-    where
-        upi1_0.user_id=?
-Hibernate: 
-    select
-        upi1_0.id,
-        upi1_0.created_at,
-        upi1_0.image_order,
-        upi1_0.image_url,
-        upi1_0.is_main,
-        upi1_0.user_id 
-    from
-        user_profile_images upi1_0 
-    where
-        upi1_0.user_id=? 
-    order by
-        upi1_0.image_order
-Hibernate: 
-    select
-        upi1_0.id,
-        upi1_0.created_at,
-        upi1_0.image_order,
-        upi1_0.image_url,
-        upi1_0.is_main,
-        upi1_0.user_id 
-    from
-        user_profile_images upi1_0 
-    where
-        upi1_0.user_id=? 
-        and upi1_0.image_order=?
-Hibernate: 
-    insert 
-    into
-        user_profile_images
-        (created_at, image_order, image_url, is_main, user_id) 
-    values
-        (?, ?, ?, ?, ?)
-Hibernate: 
-    select
-        upi1_0.id,
-        upi1_0.created_at,
-        upi1_0.image_order,
-        upi1_0.image_url,
-        upi1_0.is_main,
-        upi1_0.user_id 
-    from
-        user_profile_images upi1_0 
-    where
-        upi1_0.user_id=? 
-    order by
-        upi1_0.image_order
-Hibernate: 
-    select
-        u1_0.id,
-        u1_0.created_at,
-        u1_0.email,
-        u1_0.nickname,
-        u1_0.password,
-        u1_0.provider,
-        u1_0.reset_password_token,
-        u1_0.reset_password_token_expires_at,
-        u1_0.review_comment,
-        u1_0.status 
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
     from
         users u1_0 
     where
@@ -553,4 +377,447 @@ Hibernate:
         upi1_0.user_id=? 
     order by
         upi1_0.image_order
+Hibernate: 
+    select
+        up1_0.id,
+        up1_0.created_at,
+        up1_0.drinking_status,
+        up1_0.ideal_type,
+        up1_0.introduction,
+        up1_0.job,
+        up1_0.mbti,
+        up1_0.personality,
+        up1_0.region,
+        up1_0.religion,
+        up1_0.smoking_status,
+        up1_0.updated_at,
+        up1_0.user_id 
+    from
+        user_profiles up1_0 
+    where
+        up1_0.user_id=?
+Hibernate: 
+    select
+        uv1_0.id,
+        uv1_0.birth_date,
+        uv1_0.created_at,
+        uv1_0.gender,
+        uv1_0.is_verified,
+        uv1_0.updated_at,
+        uv1_0.user_id,
+        uv1_0.verified_at 
+    from
+        user_verifications uv1_0 
+    where
+        uv1_0.user_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.admin_memo,
+        u1_0.created_at,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
+        u1_0.nickname,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
+        u1_0.provider,
+        u1_0.reset_password_token,
+        u1_0.reset_password_token_expires_at,
+        u1_0.review_comment,
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.status=? 
+    order by
+        u1_0.created_at
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.fraud_review_status=?
+Hibernate: 
+    select
+        ur1_0.id,
+        ur1_0.admin_note,
+        ur1_0.created_at,
+        ur1_0.detail,
+        ur1_0.reason_code,
+        ur1_0.reported_user_id,
+        ur1_0.reporter_user_id,
+        ur1_0.status 
+    from
+        user_reports ur1_0 
+    where
+        ur1_0.status=? 
+    order by
+        ur1_0.created_at desc
+Hibernate: 
+    select
+        up1_0.id,
+        up1_0.created_at,
+        up1_0.drinking_status,
+        up1_0.ideal_type,
+        up1_0.introduction,
+        up1_0.job,
+        up1_0.mbti,
+        up1_0.personality,
+        up1_0.region,
+        up1_0.religion,
+        up1_0.smoking_status,
+        up1_0.updated_at,
+        up1_0.user_id 
+    from
+        user_profiles up1_0 
+    where
+        up1_0.user_id=?
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.fraud_review_status=?
+Hibernate: 
+    select
+        uv1_0.id,
+        uv1_0.birth_date,
+        uv1_0.created_at,
+        uv1_0.gender,
+        uv1_0.is_verified,
+        uv1_0.updated_at,
+        uv1_0.user_id,
+        uv1_0.verified_at 
+    from
+        user_verifications uv1_0 
+    where
+        uv1_0.user_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.admin_memo,
+        u1_0.created_at,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
+        u1_0.nickname,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
+        u1_0.provider,
+        u1_0.reset_password_token,
+        u1_0.reset_password_token_expires_at,
+        u1_0.review_comment,
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.fraud_review_status in (?) 
+    order by
+        u1_0.fraud_risk_score desc,
+        u1_0.created_at desc
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.status in (?, ?) 
+        and u1_0.review_deadline_at<?
+Hibernate: 
+    select
+        count(ur1_0.id) 
+    from
+        user_reports ur1_0 
+    where
+        ur1_0.status=?
+Hibernate: 
+    select
+        count(ur1_0.id) 
+    from
+        user_reports ur1_0 
+    where
+        ur1_0.status=?
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.status=?
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.status=?
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.status=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.admin_memo,
+        u1_0.created_at,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
+        u1_0.nickname,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
+        u1_0.provider,
+        u1_0.reset_password_token,
+        u1_0.reset_password_token_expires_at,
+        u1_0.review_comment,
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.status=? 
+    order by
+        u1_0.created_at
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.status in (?, ?) 
+        and u1_0.review_deadline_at<?
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.fraud_review_status=?
+Hibernate: 
+    select
+        ur1_0.id,
+        ur1_0.admin_note,
+        ur1_0.created_at,
+        ur1_0.detail,
+        ur1_0.reason_code,
+        ur1_0.reported_user_id,
+        ur1_0.reporter_user_id,
+        ur1_0.status 
+    from
+        user_reports ur1_0 
+    where
+        ur1_0.status=? 
+    order by
+        ur1_0.created_at desc
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.admin_memo,
+        u1_0.created_at,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
+        u1_0.nickname,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
+        u1_0.provider,
+        u1_0.reset_password_token,
+        u1_0.reset_password_token_expires_at,
+        u1_0.review_comment,
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.fraud_review_status in (?) 
+    order by
+        u1_0.fraud_risk_score desc,
+        u1_0.created_at desc
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.fraud_review_status=?
+Hibernate: 
+    select
+        up1_0.id,
+        up1_0.created_at,
+        up1_0.drinking_status,
+        up1_0.ideal_type,
+        up1_0.introduction,
+        up1_0.job,
+        up1_0.mbti,
+        up1_0.personality,
+        up1_0.region,
+        up1_0.religion,
+        up1_0.smoking_status,
+        up1_0.updated_at,
+        up1_0.user_id 
+    from
+        user_profiles up1_0 
+    where
+        up1_0.user_id=?
+Hibernate: 
+    select
+        count(ur1_0.id) 
+    from
+        user_reports ur1_0 
+    where
+        ur1_0.status=?
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.status=?
+Hibernate: 
+    select
+        uv1_0.id,
+        uv1_0.birth_date,
+        uv1_0.created_at,
+        uv1_0.gender,
+        uv1_0.is_verified,
+        uv1_0.updated_at,
+        uv1_0.user_id,
+        uv1_0.verified_at 
+    from
+        user_verifications uv1_0 
+    where
+        uv1_0.user_id=?
+Hibernate: 
+    select
+        count(ur1_0.id) 
+    from
+        user_reports ur1_0 
+    where
+        ur1_0.status=?
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.status=?
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.status=?
+Hibernate: 
+    select
+        ur1_0.id,
+        ur1_0.admin_note,
+        ur1_0.created_at,
+        ur1_0.detail,
+        ur1_0.reason_code,
+        ur1_0.reported_user_id,
+        ur1_0.reporter_user_id,
+        ur1_0.status 
+    from
+        user_reports ur1_0 
+    where
+        ur1_0.status=? 
+    order by
+        ur1_0.created_at desc
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.fraud_review_status=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.admin_memo,
+        u1_0.created_at,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.fraud_review_status,
+        u1_0.fraud_risk_score,
+        u1_0.last_warning_sent_at,
+        u1_0.nickname,
+        u1_0.password_hash,
+        u1_0.phone,
+        u1_0.profile_completed_at,
+        u1_0.provider,
+        u1_0.reset_password_token,
+        u1_0.reset_password_token_expires_at,
+        u1_0.review_comment,
+        u1_0.review_deadline_at,
+        u1_0.status,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.fraud_review_status in (?) 
+    order by
+        u1_0.fraud_risk_score desc,
+        u1_0.created_at desc
+Hibernate: 
+    select
+        count(u1_0.id) 
+    from
+        users u1_0 
+    where
+        u1_0.fraud_review_status=?
+Hibernate: 
+    select
+        count(ur1_0.id) 
+    from
+        user_reports ur1_0 
+    where
+        ur1_0.status=?
+Hibernate: 
+    select
+        count(ur1_0.id) 
+    from
+        user_reports ur1_0 
+    where
+        ur1_0.status=?
+Hibernate: 
+    select
+        bi1_0.id,
+        bi1_0.active,
+        bi1_0.created_at,
+        bi1_0.identity_type,
+        bi1_0.identity_value,
+        bi1_0.reason,
+        bi1_0.source_user_id,
+        bi1_0.updated_at 
+    from
+        blocked_identities bi1_0 
+    where
+        bi1_0.active=true 
+    order by
+        bi1_0.created_at desc
 ^C

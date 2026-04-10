@@ -16,8 +16,6 @@ public class UserResponse {
     private String provider;
     private String status;
     private LocalDateTime reviewDeadlineAt;
-    private Integer fraudRiskScore;
-    private String fraudReviewStatus;
 
     public static UserResponse from(User user) {
         return new UserResponse(
@@ -26,9 +24,7 @@ public class UserResponse {
                 user.getNickname(),
                 user.getProvider(),
                 user.getStatus(),
-                user.getReviewDeadlineAt(),
-                user.getFraudRiskScore(),
-                user.getFraudReviewStatus()
+                user.getReviewDeadlineAt()
         );
     }
 }

@@ -25,8 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -64,7 +66,7 @@ public class AdminReviewService {
         );
     }
 
-    // 상태, 성별, 프로필 완성 여부, 마감 임박 여부를 함께 적용해 심사 대상을 조회한다.
+    // 상태, 검색어, 성별, 프로필 완성 여부, 마감 임박 여부를 기준으로 심사 대상을 조회한다.
     @Transactional(readOnly = true)
     public List<AdminReviewCandidateResponse> getCandidates(
             String status,
@@ -79,7 +81,9 @@ public class AdminReviewService {
         LocalDateTime dueSoonThreshold = LocalDateTime.now().plusDays(1);
 
         return userRepository.findByStatusOrderByCreatedAtAsc(normalizedStatus).stream()
-                .map(this::toCandidateResponse)
+                // 가입 중간 데이터가 비어 있어도 관리자 목록 전체가 404로 깨지지 않게 안전하게 변환한다.
+                .map(this::toCandidateResponseSafely)
+                .flatMap(Optional::stream)
                 .filter(candidate -> !dueSoonOnly || (candidate.getReviewDeadlineAt() != null && !candidate.getReviewDeadlineAt().isAfter(dueSoonThreshold)))
                 .filter(candidate -> "ALL".equals(normalizedGender) || normalizedGender.equalsIgnoreCase(candidate.getGender()))
                 .filter(candidate -> !profileCompleteOnly || candidate.isProfileComplete())
@@ -107,7 +111,7 @@ public class AdminReviewService {
         UserProfile profile = userProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로필 정보를 찾을 수 없습니다."));
         UserVerification verification = userVerificationRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "인증 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "본인 인증 정보를 찾을 수 없습니다."));
 
         long imageCount = userProfileImageRepository.countByUserId(userId);
         boolean profileComplete = accountReviewPolicyService.isProfileComplete(profile, verification);
@@ -117,11 +121,11 @@ public class AdminReviewService {
         }
 
         if (!profileComplete) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "프로필 필수 항목이 모두 입력되어야 승인할 수 있습니다.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "필수 프로필 정보가 모두 입력되어야 승인할 수 있습니다.");
         }
 
         if ("HIGH_RISK".equals(user.getFraudReviewStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "고위험 스캠 징후가 감지된 계정은 승인할 수 없습니다. 스캠 모니터에서 먼저 검토해주세요.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "고위험 스캠 의심 계정은 승인할 수 없습니다. 먼저 스캠 모니터링에서 확인해 주세요.");
         }
 
         user.setStatus("ACTIVE");
@@ -165,15 +169,42 @@ public class AdminReviewService {
         return new MessageResponse("운영자 메모를 저장했습니다.");
     }
 
-    private AdminReviewCandidateResponse toCandidateResponse(User user) {
-        UserProfile profile = userProfileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로필 정보를 찾을 수 없습니다."));
-        UserVerification verification = userVerificationRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "인증 정보를 찾을 수 없습니다."));
+    private Optional<AdminReviewCandidateResponse> toCandidateResponseSafely(User user) {
+        Optional<UserProfile> profileOptional = userProfileRepository.findByUserId(user.getId());
+        Optional<UserVerification> verificationOptional = userVerificationRepository.findByUserId(user.getId());
 
+        if (profileOptional.isEmpty() || verificationOptional.isEmpty()) {
+            return Optional.of(new AdminReviewCandidateResponse(
+                    user.getId(),
+                    user.getEmail(),
+                    user.getNickname(),
+                    user.getProvider(),
+                    user.getStatus(),
+                    user.getReviewComment(),
+                    user.getAdminMemo(),
+                    user.getFraudRiskScore(),
+                    user.getFraudReviewStatus(),
+                    user.getCreatedAt(),
+                    user.getReviewDeadlineAt(),
+                    false,
+                    accountReviewPolicyService.calculateRemainingDays(user.getReviewDeadlineAt()),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Collections.emptyList()
+            ));
+        }
+
+        UserProfile profile = profileOptional.get();
+        UserVerification verification = verificationOptional.get();
         boolean profileComplete = accountReviewPolicyService.isProfileComplete(profile, verification);
 
-        return new AdminReviewCandidateResponse(
+        return Optional.of(new AdminReviewCandidateResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),
@@ -199,7 +230,7 @@ public class AdminReviewService {
                         .stream()
                         .map(UserProfileImageResponse::from)
                         .toList()
-        );
+        ));
     }
 
     private boolean matchesQuery(AdminReviewCandidateResponse candidate, String query) {

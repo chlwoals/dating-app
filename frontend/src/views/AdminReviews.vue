@@ -199,11 +199,10 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
-import axios from "axios";
+import api from "../api/api";
 
-const hostname = window.location.hostname || "localhost";
-const baseURL = `http://${hostname}:8080/api`;
-const assetBaseURL = `http://${hostname}:8080`;
+const apiBaseURL = String(api.defaults.baseURL || "");
+const assetBaseURL = apiBaseURL.endsWith("/api") ? apiBaseURL.slice(0, -4) : apiBaseURL;
 const templateStorageKey = "adminRejectTemplates";
 
 const defaultRejectTemplates = {
@@ -264,8 +263,8 @@ const loadDashboard = async () => {
   try {
     persistAdminKey();
     const [summaryRes, candidatesRes] = await Promise.all([
-      axios.get(`${baseURL}/admin/reviews/summary`, { headers: getHeaders() }),
-      axios.get(`${baseURL}/admin/reviews`, {
+      api.get(`/admin/reviews/summary`, { headers: getHeaders() }),
+      api.get(`/admin/reviews`, {
         headers: getHeaders(),
         params: { status: statusFilter.value, dueSoonOnly: dueSoonOnly.value, q: searchKeyword.value },
       }),
@@ -297,7 +296,7 @@ const toggleHistory = async (userId) => {
 
   historyLoading.value = true;
   try {
-    const { data } = await axios.get(`${baseURL}/admin/reviews/${userId}/history`, {
+    const { data } = await api.get(`/admin/reviews/${userId}/history`, {
       headers: getHeaders(),
     });
     histories.value = {
@@ -314,7 +313,7 @@ const toggleHistory = async (userId) => {
 const approveCandidate = async (userId) => {
   try {
     persistAdminKey();
-    const { data } = await axios.post(`${baseURL}/admin/reviews/${userId}/approve`, null, {
+    const { data } = await api.post(`/admin/reviews/${userId}/approve`, null, {
       headers: getHeaders(),
     });
     message.value = data.message;
@@ -334,8 +333,8 @@ const rejectCandidate = async (userId) => {
       return;
     }
 
-    const { data } = await axios.post(
-      `${baseURL}/admin/reviews/${userId}/reject`,
+    const { data } = await api.post(
+      `/admin/reviews/${userId}/reject`,
       { reviewComment },
       { headers: getHeaders() }
     );
@@ -356,8 +355,8 @@ const saveMemo = async (userId) => {
       return;
     }
 
-    const { data } = await axios.put(
-      `${baseURL}/admin/reviews/${userId}/memo`,
+    const { data } = await api.put(
+      `/admin/reviews/${userId}/memo`,
       { adminMemo },
       { headers: getHeaders() }
     );

@@ -30,7 +30,7 @@
 
       <div class="policy-box">
         <strong>안내</strong>
-        <p>심사 대기나 반려 상태의 계정도 로그인 후 사진 업로드 화면에서 다시 심사를 진행할 수 있습니다.</p>
+        <p>사진 심사 대기나 반려 상태의 계정은 로그인 후 심사 대기 화면에서 다시 등록 절차를 이어갈 수 있습니다.</p>
       </div>
     </div>
   </section>
@@ -52,7 +52,6 @@ const form = reactive({
   password: "",
 });
 
-// 로그인 후 계정 상태에 따라 홈 또는 심사 대기 화면으로 보낸다.
 const login = async () => {
   loading.value = true;
   errorMessage.value = "";
@@ -68,7 +67,13 @@ const login = async () => {
 
     router.push("/review-pending");
   } catch (error) {
-    const message = error.response?.data?.message || "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.";
+    const status = error.response?.status;
+    const message =
+      error.response?.data?.message ||
+      (status === 401
+        ? "이메일 또는 비밀번호를 다시 확인해주세요."
+        : "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.");
+
     errorMessage.value = message;
     window.alert(message);
 

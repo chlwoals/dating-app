@@ -16,22 +16,21 @@ const api = axios.create({
   baseURL: resolveApiBaseUrl(),
 });
 
-// 저장된 JWT가 있으면 모든 API 요청에 Authorization 헤더를 붙인다.
 api.interceptors.request.use((config) => {
   const token = getToken();
+  const isAuthRequest = config.url?.startsWith("/auth/");
 
-  if (token) {
+  if (token && !isAuthRequest) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
   return config;
 });
 
-// 인증 만료(401) 시 프론트에 남아 있는 로그인 상태를 정리한다.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       clearToken();
     }
 

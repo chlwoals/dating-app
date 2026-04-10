@@ -28,26 +28,24 @@ public class ProfileService {
     private final AccountReviewPolicyService accountReviewPolicyService;
     private final FraudDetectionService fraudDetectionService;
 
-    // 로그인한 사용자의 계정/프로필/인증 정보를 한 번에 조회한다.
+    // 로그인한 사용자의 계정, 프로필, 인증 정보를 한 번에 조회한다.
     @Transactional(readOnly = true)
     public MyProfileResponse getMyProfile(String email) {
         User user = getUserByEmail(email);
-        UserProfile profile = userProfileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로필 정보를 찾을 수 없습니다."));
-        UserVerification verification = userVerificationRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "인증 정보를 찾을 수 없습니다."));
+        UserProfile profile = userProfileRepository.findByUserId(user.getId()).orElse(null);
+        UserVerification verification = userVerificationRepository.findByUserId(user.getId()).orElse(null);
 
-        return MyProfileResponse.from(user, profile, verification);
+        return buildProfileResponse(user, profile, verification);
     }
 
-    // 내 프로필 수정 화면의 값을 users, user_profiles, user_verifications에 반영한다.
+    // 프로필 수정 화면의 값을 users, user_profiles, user_verifications에 반영한다.
     @Transactional
     public MyProfileResponse updateMyProfile(String email, UpdateMyProfileRequest request) {
         User user = getUserByEmail(email);
         UserProfile profile = userProfileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로필 정보를 찾을 수 없습니다."));
+                .orElseGet(() -> UserProfile.builder().userId(user.getId()).build());
         UserVerification verification = userVerificationRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "인증 정보를 찾을 수 없습니다."));
+                .orElseGet(() -> UserVerification.builder().userId(user.getId()).build());
 
         user.setNickname(request.getNickname());
 
@@ -64,6 +62,9 @@ public class ProfileService {
 
         verification.setBirthDate(request.getBirthDate());
         verification.setGender(request.getGender());
+        if (verification.getIsVerified() == null) {
+            verification.setIsVerified(false);
+        }
         verification.setUpdatedAt(LocalDateTime.now());
 
         if (accountReviewPolicyService.isProfileComplete(profile, verification)) {
@@ -75,7 +76,7 @@ public class ProfileService {
             if ("PENDING_REVIEW".equals(user.getStatus())) {
                 user.setReviewComment(imageCount >= 2
                         ? "프로필과 사진 등록이 완료되어 심사 대기 중입니다."
-                        : "프로필은 완료되었지만 사진이 아직 부족합니다. 대표 사진 포함 최소 2장을 등록해주세요.");
+                        : "프로필은 완료되었지만 사진이 아직 부족합니다. 대표 사진 포함 최소 2장을 등록해 주세요.");
             }
         } else {
             user.setProfileCompletedAt(null);
@@ -89,7 +90,31 @@ public class ProfileService {
         userVerificationRepository.save(verification);
         fraudDetectionService.evaluateUserProfile(user.getId());
 
-        return MyProfileResponse.from(user, profile, verification);
+        return buildProfileResponse(user, profile, verification);
+    }
+
+    private MyProfileResponse buildProfileResponse(User user, UserProfile profile, UserVerification verification) {
+        return new MyProfileResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getNickname(),
+                user.getStatus(),
+                user.getProvider(),
+                user.getReviewComment(),
+                verification != null ? verification.getBirthDate() : null,
+                verification != null ? verification.getGender() : null,
+                verification != null ? verification.getIsVerified() : Boolean.FALSE,
+                verification != null ? verification.getVerifiedAt() : null,
+                profile != null ? defaultString(profile.getRegion()) : "",
+                profile != null ? defaultString(profile.getJob()) : "",
+                profile != null ? defaultString(profile.getMbti()) : "",
+                profile != null ? defaultString(profile.getPersonality()) : "",
+                profile != null ? defaultString(profile.getIdealType()) : "",
+                profile != null ? defaultString(profile.getIntroduction()) : "",
+                profile != null ? defaultString(profile.getSmokingStatus()) : "NON_SMOKER",
+                profile != null ? defaultString(profile.getDrinkingStatus()) : "NONE",
+                profile != null ? defaultString(profile.getReligion()) : "NONE"
+        );
     }
 
     private User getUserByEmail(String email) {
@@ -102,5 +127,9 @@ public class ProfileService {
             return null;
         }
         return value;
+    }
+
+    private String defaultString(String value) {
+        return value == null ? "" : value;
     }
 }

@@ -2,11 +2,13 @@ package com.dating.backend.controller;
 
 import com.dating.backend.dto.AdminRiskActionRequest;
 import com.dating.backend.dto.AdminUserReportResponse;
+import com.dating.backend.dto.BlockedIdentityResponse;
 import com.dating.backend.dto.FraudRiskLogResponse;
 import com.dating.backend.dto.MessageResponse;
 import com.dating.backend.dto.ResolveReportRequest;
 import com.dating.backend.dto.ScamMonitorSummaryResponse;
 import com.dating.backend.dto.ScamMonitorUserResponse;
+import com.dating.backend.service.BlockedIdentityService;
 import com.dating.backend.service.SafetyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ import java.util.List;
 public class AdminSafetyController {
 
     private final SafetyService safetyService;
+    private final BlockedIdentityService blockedIdentityService;
 
     @GetMapping("/summary")
     public ScamMonitorSummaryResponse getSummary(@RequestHeader("X-Admin-Key") String adminKey) {
@@ -70,6 +73,26 @@ public class AdminSafetyController {
     ) {
         safetyService.validateAdminKey(adminKey);
         return safetyService.getReports(status);
+    }
+
+    @GetMapping("/blocked-identities")
+    public List<BlockedIdentityResponse> getBlockedIdentities(
+            @RequestHeader("X-Admin-Key") String adminKey,
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "ALL") String identityType
+    ) {
+        safetyService.validateAdminKey(adminKey);
+        return blockedIdentityService.getActiveBlockedIdentities(q, identityType);
+    }
+
+    @PutMapping("/blocked-identities/{blockedIdentityId}/release")
+    public MessageResponse releaseBlockedIdentity(
+            @RequestHeader("X-Admin-Key") String adminKey,
+            @PathVariable Long blockedIdentityId
+    ) {
+        safetyService.validateAdminKey(adminKey);
+        blockedIdentityService.releaseBlockedIdentity(blockedIdentityId);
+        return new MessageResponse("재가입 차단 식별값을 해제했습니다.");
     }
 
     @PutMapping("/reports/{reportId}/resolve")

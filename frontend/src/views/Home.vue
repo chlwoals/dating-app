@@ -430,11 +430,38 @@ const featuredMatch = computed(() => ({
 const likedCount = computed(() => Object.values(reactions.value).filter((value) => value === "like").length);
 const passedCount = computed(() => Object.values(reactions.value).filter((value) => value === "pass").length);
 
+async function fetchProfileWithFallback() {
+  try {
+    const { data } = await api.get("/profile/me");
+    return data;
+  } catch (error) {
+    if (error.response?.status !== 404) {
+      throw error;
+    }
+
+    const { data } = await api.get("/user/me");
+    return {
+      ...data,
+      birthDate: "",
+      region: "",
+      job: "",
+      mbti: "",
+      personality: "",
+      idealType: "",
+      introduction: "",
+      smokingStatus: "NON_SMOKER",
+      drinkingStatus: "NONE",
+      religion: "NONE",
+      gender: "MALE",
+    };
+  }
+}
+
 onMounted(async () => {
   try {
-    const [{ data: me }, { data: myProfile }, { data: myImages }] = await Promise.all([
+    const [{ data: me }, myProfile, { data: myImages }] = await Promise.all([
       api.get("/user/me"),
-      api.get("/profile/me"),
+      fetchProfileWithFallback(),
       api.get("/profile-images/me"),
     ]);
 

@@ -5,7 +5,7 @@
         <div>
           <p class="eyebrow">Admin Safety</p>
           <h1>로맨스 스캠 모니터</h1>
-          <p class="sub-copy">위험 회원 검토, 제한 해제, 신고 처리까지 한곳에서 관리합니다.</p>
+          <p class="sub-copy">위험 회원 검토, 재가입 차단, 신고 처리까지 한곳에서 관리합니다.</p>
         </div>
         <RouterLink class="ghost-button" to="/admin/reviews">가입 심사로 이동</RouterLink>
       </div>
@@ -25,7 +25,15 @@
         </label>
         <label>
           <span>검색</span>
-          <input v-model.trim="searchKeyword" type="text" placeholder="이메일, 닉네임, 메모, 안내 문구" />
+          <input v-model.trim="searchKeyword" type="text" placeholder="이메일, 닉네임, 메모, 차단 사유" />
+        </label>
+        <label>
+          <span>차단 식별값</span>
+          <select v-model="identityType">
+            <option value="ALL">전체</option>
+            <option value="EMAIL">이메일</option>
+            <option value="PHONE">전화번호</option>
+          </select>
         </label>
         <label>
           <span>신고 상태</span>
@@ -77,25 +85,38 @@
               </div>
 
               <p class="detail-copy"><strong>최근 탐지</strong><br />{{ user.latestRiskDetail }}</p>
-              <p class="detail-copy"><strong>사용자 안내</strong><br />{{ user.reviewComment || '없음' }}</p>
+              <p class="detail-copy"><strong>재가입 차단</strong><br />{{ user.identityBlocked ? `차단됨 (${user.blockedIdentityTypes || '내부 식별값'})` : '미차단' }}</p>
               <p class="detail-copy"><strong>운영 메모</strong><br />{{ user.adminMemo || '없음' }}</p>
 
               <label class="review-box">
                 <span>재검토 메모</span>
                 <textarea v-model.trim="reviewNotes[user.userId]" rows="3" placeholder="재검토 근거를 남겨주세요."></textarea>
               </label>
+              <div class="template-row">
+                <button
+                  v-for="template in reviewTemplates"
+                  :key="template"
+                  type="button"
+                  class="template-chip"
+                  @click="applyReviewTemplate(user.userId, template)"
+                >
+                  {{ template }}
+                </button>
+              </div>
 
               <div class="action-grid">
                 <button class="ghost-button compact" @click="reviewRiskUser(user.userId, 'MARK_NORMAL')">정상화</button>
                 <button class="ghost-button compact" @click="reviewRiskUser(user.userId, 'MARK_WATCH')">주의 유지</button>
                 <button class="ghost-button compact danger" @click="reviewRiskUser(user.userId, 'SUSPEND_ACCOUNT')">이용 제한</button>
                 <button class="ghost-button compact" @click="reviewRiskUser(user.userId, 'RELEASE_ACCOUNT')">제한 해제</button>
+                <button class="ghost-button compact danger" @click="reviewRiskUser(user.userId, 'BLOCK_IDENTITY')">재가입 차단</button>
+                <button class="ghost-button compact" @click="reviewRiskUser(user.userId, 'UNBLOCK_IDENTITY')">차단 해제</button>
                 <button class="ghost-button compact" @click="toggleLogs(user.userId)">{{ expandedUserId === user.userId ? '위험 로그 닫기' : '위험 로그 보기' }}</button>
               </div>
 
               <div v-if="expandedUserId === user.userId" class="logs-box">
                 <article v-for="log in riskLogs[user.userId] || []" :key="log.id" class="log-item">
-                  <div class="log-head"><strong>{{ log.riskType }}</strong><span>{{ formatDateTime(log.createdAt) }}</span></div>
+                  <div class="log-head"><strong>{{ riskTypeLabel(log.riskType) }}</strong><span>{{ formatDateTime(log.createdAt) }}</span></div>
                   <p>{{ log.detail }}</p>
                   <small>점수 {{ log.score }}</small>
                 </article>
@@ -126,10 +147,43 @@
                 <span>처리 메모</span>
                 <textarea v-model.trim="resolveNotes[report.id]" rows="3" placeholder="처리 결과를 남겨주세요."></textarea>
               </label>
+              <div class="template-row">
+                <button
+                  v-for="template in reportTemplates"
+                  :key="template"
+                  type="button"
+                  class="template-chip"
+                  @click="applyReportTemplate(report.id, template)"
+                >
+                  {{ template }}
+                </button>
+              </div>
               <button class="primary-button compact" @click="resolveReport(report.id)" :disabled="report.status === 'RESOLVED'">처리 완료</button>
             </article>
           </div>
           <p v-else class="empty-state">조건에 맞는 신고가 없습니다.</p>
+
+          <div class="section-head blocked-head">
+            <div>
+              <h2>재가입 차단 목록</h2>
+              <p>차단된 이메일과 전화번호를 확인하고 필요 시 개별 해제합니다.</p>
+            </div>
+          </div>
+
+          <div v-if="blockedIdentities.length" class="report-list">
+            <article v-for="identity in blockedIdentities" :key="identity.id" class="report-card">
+              <div class="report-head">
+                <strong>#{{ identity.id }} · {{ identity.identityType }}</strong>
+                <span class="report-status">{{ identity.active ? 'ACTIVE' : 'RELEASED' }}</span>
+              </div>
+              <p class="report-meta">식별값 {{ identity.identityValue }}</p>
+              <p class="report-meta">대상 회원 {{ identity.sourceUserNickname || '-' }} / {{ identity.sourceUserEmail || '-' }}</p>
+              <p class="detail-copy">{{ identity.reason || '운영 사유 없음' }}</p>
+              <p class="report-meta">등록일 {{ formatDateTime(identity.createdAt) }}</p>
+              <button class="ghost-button compact" @click="releaseBlockedIdentity(identity.id)">차단 해제</button>
+            </article>
+          </div>
+          <p v-else class="empty-state">현재 활성화된 재가입 차단 식별값이 없습니다.</p>
         </section>
       </div>
     </div>
@@ -139,18 +193,17 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
-import axios from "axios";
-
-const hostname = window.location.hostname || "localhost";
-const baseURL = `http://${hostname}:8080/api`;
+import api from "../../api/api";
 
 const adminKey = ref(localStorage.getItem("adminReviewKey") || "");
 const riskStatus = ref("WATCH");
 const reportStatus = ref("OPEN");
+const identityType = ref("ALL");
 const searchKeyword = ref("");
 const summary = ref(null);
 const riskUsers = ref([]);
 const reports = ref([]);
+const blockedIdentities = ref([]);
 const riskLogs = ref({});
 const resolveNotes = ref({});
 const reviewNotes = ref({});
@@ -158,6 +211,20 @@ const expandedUserId = ref(null);
 const loading = ref(false);
 const message = ref("");
 const errorMessage = ref("");
+
+const reviewTemplates = [
+  "외부 메신저 유도 정황 확인",
+  "투자·송금 유도 패턴 확인",
+  "사칭 의심으로 이용 제한 유지",
+  "재검토 결과 정상 사용자로 확인",
+];
+
+const reportTemplates = [
+  "신고 내용 확인 후 경고 조치",
+  "신고 내용 확인 후 이용 제한 처리",
+  "증거 부족으로 모니터링 유지",
+  "중복 신고 정리 완료",
+];
 
 const getHeaders = () => ({ "X-Admin-Key": adminKey.value });
 const persistAdminKey = () => localStorage.setItem("adminReviewKey", adminKey.value);
@@ -169,15 +236,17 @@ const loadDashboard = async () => {
 
   try {
     persistAdminKey();
-    const [summaryRes, usersRes, reportsRes] = await Promise.all([
-      axios.get(`${baseURL}/admin/safety/summary`, { headers: getHeaders() }),
-      axios.get(`${baseURL}/admin/safety/users`, { headers: getHeaders(), params: { riskStatus: riskStatus.value, q: searchKeyword.value } }),
-      axios.get(`${baseURL}/admin/safety/reports`, { headers: getHeaders(), params: { status: reportStatus.value } }),
+    const [summaryRes, usersRes, reportsRes, blockedRes] = await Promise.all([
+      api.get(`/admin/safety/summary`, { headers: getHeaders() }),
+      api.get(`/admin/safety/users`, { headers: getHeaders(), params: { riskStatus: riskStatus.value, q: searchKeyword.value } }),
+      api.get(`/admin/safety/reports`, { headers: getHeaders(), params: { status: reportStatus.value } }),
+      api.get(`/admin/safety/blocked-identities`, { headers: getHeaders(), params: { q: searchKeyword.value, identityType: identityType.value } }),
     ]);
 
     summary.value = summaryRes.data;
     riskUsers.value = usersRes.data;
     reports.value = reportsRes.data;
+    blockedIdentities.value = blockedRes.data;
     resolveNotes.value = Object.fromEntries(reports.value.map((report) => [report.id, report.adminNote || ""]));
     reviewNotes.value = Object.fromEntries(riskUsers.value.map((user) => [user.userId, user.adminMemo || ""]));
   } catch (error) {
@@ -196,11 +265,19 @@ const toggleLogs = async (userId) => {
   if (riskLogs.value[userId]) return;
 
   try {
-    const { data } = await axios.get(`${baseURL}/admin/safety/users/${userId}/logs`, { headers: getHeaders() });
+    const { data } = await api.get(`/admin/safety/users/${userId}/logs`, { headers: getHeaders() });
     riskLogs.value = { ...riskLogs.value, [userId]: data };
   } catch (error) {
     errorMessage.value = error.response?.data?.message || "위험 로그를 불러오지 못했습니다.";
   }
+};
+
+const applyReviewTemplate = (userId, template) => {
+  reviewNotes.value[userId] = template;
+};
+
+const applyReportTemplate = (reportId, template) => {
+  resolveNotes.value[reportId] = template;
 };
 
 const reviewRiskUser = async (userId, action) => {
@@ -211,7 +288,7 @@ const reviewRiskUser = async (userId, action) => {
   }
 
   try {
-    const { data } = await axios.put(`${baseURL}/admin/safety/users/${userId}/review`, { action, adminNote }, { headers: getHeaders() });
+    const { data } = await api.put(`/admin/safety/users/${userId}/review`, { action, adminNote }, { headers: getHeaders() });
     message.value = data.message;
     await loadDashboard();
   } catch (error) {
@@ -227,7 +304,7 @@ const resolveReport = async (reportId) => {
   }
 
   try {
-    const { data } = await axios.put(`${baseURL}/admin/safety/reports/${reportId}/resolve`, { adminNote }, { headers: getHeaders() });
+    const { data } = await api.put(`/admin/safety/reports/${reportId}/resolve`, { adminNote }, { headers: getHeaders() });
     message.value = data.message;
     await loadDashboard();
   } catch (error) {
@@ -235,7 +312,25 @@ const resolveReport = async (reportId) => {
   }
 };
 
+const releaseBlockedIdentity = async (blockedIdentityId) => {
+  try {
+    const { data } = await api.put(`/admin/safety/blocked-identities/${blockedIdentityId}/release`, {}, { headers: getHeaders() });
+    message.value = data.message;
+    await loadDashboard();
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || "재가입 차단 해제에 실패했습니다.";
+  }
+};
+
 const reasonLabel = (value) => ({ INVESTMENT: "투자·금전 유도", EXTERNAL_CONTACT: "외부 메신저 유도", IMPERSONATION: "사칭 의심", HARASSMENT: "부적절한 접근", OTHER: "기타" }[value] || value);
+
+const riskTypeLabel = (value) => ({
+  ADMIN_REVIEW: "운영자 검토",
+  IDENTITY_BLOCKED: "재가입 차단",
+  IDENTITY_UNBLOCKED: "재가입 차단 해제",
+  MESSAGE_PATTERN: "메시지 패턴 탐지",
+  REPORT_ACCUMULATED: "신고 누적",
+})(value) || value;
 
 const formatDateTime = (value) => {
   if (!value) return "-";
@@ -301,7 +396,8 @@ h1 {
 
 .sub-copy,
 .detail-copy,
-.empty-state {
+.empty-state,
+.report-meta {
   color: #6f564d;
   line-height: 1.65;
 }
@@ -316,7 +412,7 @@ h1 {
 
 .toolbar {
   margin-top: 28px;
-  grid-template-columns: 1.25fr 0.8fr 1fr 0.9fr auto;
+  grid-template-columns: 1.15fr 0.75fr 1fr 0.75fr 0.85fr auto;
   align-items: stretch;
 }
 
@@ -458,6 +554,32 @@ textarea {
 
 .review-box {
   margin-top: 14px;
+}
+
+.template-row {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.template-chip {
+  border: 1px solid rgba(207, 150, 128, 0.42);
+  background: rgba(255, 247, 240, 0.9);
+  color: #7a4b3f;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.template-chip:hover {
+  background: rgba(250, 231, 220, 0.95);
+}
+
+.blocked-head {
+  margin-top: 26px;
 }
 
 .logs-box {

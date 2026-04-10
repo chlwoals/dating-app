@@ -24,7 +24,7 @@ public class FraudDetectionService {
     private final UserProfileRepository userProfileRepository;
     private final FraudRiskLogRepository fraudRiskLogRepository;
 
-    // 프로필 문구에서 스캠 유도에 자주 쓰이는 키워드를 점수화해 위험도를 계산한다.
+    // 프로필 문구에 포함된 위험 키워드를 기준으로 내부 위험 점수를 계산한다.
     @Transactional
     public void evaluateUserProfile(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
@@ -54,7 +54,7 @@ public class FraudDetectionService {
         rules.put("텔레그램", 25);
         rules.put("오픈채팅", 20);
         rules.put("라인으로", 20);
-        rules.put("카톡으로", 20);
+        rules.put("카카오로", 20);
 
         List<String> matchedKeywords = new ArrayList<>();
         int score = 0;
@@ -76,7 +76,7 @@ public class FraudDetectionService {
 
         if ("HIGH_RISK".equals(nextStatus) && "ACTIVE".equals(user.getStatus())) {
             user.setStatus("SUSPENDED");
-            user.setReviewComment("위험 활동이 감지되어 운영 검토가 완료될 때까지 계정 이용이 제한되었습니다.");
+            user.setReviewComment("운영 정책상 이용이 제한되었습니다.");
         }
 
         userRepository.save(user);
