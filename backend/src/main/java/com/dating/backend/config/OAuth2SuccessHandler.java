@@ -1,3 +1,6 @@
+/**
+ * OAuth2SuccessHandler 설정
+ */
 package com.dating.backend.config;
 
 import com.dating.backend.entity.User;

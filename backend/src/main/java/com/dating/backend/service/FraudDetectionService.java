@@ -1,3 +1,6 @@
+/**
+ * FraudDetectionService 비즈니스 로직
+ */
 package com.dating.backend.service;
 
 import com.dating.backend.entity.FraudRiskLog;
@@ -24,7 +27,6 @@ public class FraudDetectionService {
     private final UserProfileRepository userProfileRepository;
     private final FraudRiskLogRepository fraudRiskLogRepository;
 
-    // 프로필 문구에 포함된 위험 키워드를 기준으로 내부 위험 점수를 계산한다.
     @Transactional
     public void evaluateUserProfile(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
@@ -42,19 +44,20 @@ public class FraudDetectionService {
         ).toLowerCase(Locale.ROOT);
 
         Map<String, Integer> rules = new LinkedHashMap<>();
+        rules.put("급전", 35);
+        rules.put("투자", 35);
+        rules.put("송금", 30);
         rules.put("코인", 35);
-        rules.put("가상자산", 35);
-        rules.put("투자", 30);
-        rules.put("수익 보장", 35);
-        rules.put("리딩방", 40);
-        rules.put("해외 계좌", 30);
-        rules.put("송금", 35);
-        rules.put("입금", 30);
-        rules.put("환전", 30);
-        rules.put("텔레그램", 25);
-        rules.put("오픈채팅", 20);
-        rules.put("라인으로", 20);
-        rules.put("카카오로", 20);
+        rules.put("비트코인", 40);
+        rules.put("선입금", 30);
+        rules.put("환전", 35);
+        rules.put("대출", 30);
+        rules.put("고수익", 30);
+        rules.put("해외", 25);
+        rules.put("출금", 20);
+        rules.put("수수료", 20);
+        rules.put("링크", 20);
+        rules.put("계좌", 20);
 
         List<String> matchedKeywords = new ArrayList<>();
         int score = 0;
@@ -76,15 +79,15 @@ public class FraudDetectionService {
 
         if ("HIGH_RISK".equals(nextStatus) && "ACTIVE".equals(user.getStatus())) {
             user.setStatus("SUSPENDED");
-            user.setReviewComment("운영 정책상 이용이 제한되었습니다.");
+            user.setReviewComment("스캠 의심 계정으로 분류되어 계정이 일시 정지되었습니다.");
         }
 
         userRepository.save(user);
 
         if (changed && score >= 30) {
             String detail = matchedKeywords.isEmpty()
-                    ? "위험 키워드 기반 점수가 감지되었습니다."
-                    : "위험 키워드 감지: " + String.join(", ", matchedKeywords);
+                    ? "스캠 의심 신호가 감지되었지만 구체 키워드는 없습니다."
+                    : "스캠 의심 키워드: " + String.join(", ", matchedKeywords);
 
             fraudRiskLogRepository.save(FraudRiskLog.builder()
                     .userId(userId)

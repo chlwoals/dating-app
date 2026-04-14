@@ -1,3 +1,6 @@
+/**
+ * AdminSafetyController API 엔드포인트
+ */
 package com.dating.backend.controller;
 
 import com.dating.backend.dto.AdminRiskActionRequest;
@@ -92,7 +95,7 @@ public class AdminSafetyController {
     ) {
         safetyService.validateAdminKey(adminKey);
         blockedIdentityService.releaseBlockedIdentity(blockedIdentityId);
-        return new MessageResponse("재가입 차단 식별값을 해제했습니다.");
+        return new MessageResponse("차단된 신원 정보가 해제되었습니다.");
     }
 
     @PutMapping("/reports/{reportId}/resolve")

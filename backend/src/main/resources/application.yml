@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mariadb://127.0.0.1:3306/dating_db
-    username: root
-    password: "5381"
+    url: ${DB_URL:jdbc:mariadb://127.0.0.1:3306/dating_db}
+    username: ${DB_USERNAME:dating_user}
+    password: ${DB_PASSWORD:dating_password}
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:

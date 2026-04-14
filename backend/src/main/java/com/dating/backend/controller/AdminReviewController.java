@@ -1,3 +1,6 @@
+/**
+ * AdminReviewController API 엔드포인트
+ */
 package com.dating.backend.controller;
 
 import com.dating.backend.dto.AdminMemoRequest;

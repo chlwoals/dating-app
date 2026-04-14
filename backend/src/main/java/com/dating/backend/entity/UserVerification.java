@@ -1,3 +1,6 @@
+/**
+ * UserVerification JPA 엔티티
+ */
 package com.dating.backend.entity;
 
 import jakarta.persistence.Column;
@@ -24,33 +27,39 @@ import java.time.LocalDateTime;
 @Builder
 public class UserVerification {
 
-    // 본인인증 및 기본 신원 확인 정보를 저장한다.
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // 인증 ID
     private Long id;
 
     @Column(nullable = false, unique = true)
+    // 유저 ID
     private Long userId;
 
     @Column(nullable = false)
+    // 생년월일
     private LocalDate birthDate;
 
     @Column(nullable = false)
+    // 성별
     private String gender;
 
     @Column(nullable = false)
+    // 인증 완료 여부
     @Builder.Default
     private Boolean isVerified = false;
 
     @Column
+    // 인증 완료 시각
     private LocalDateTime verifiedAt;
 
     @Column(nullable = false)
+    // 생성 시각
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(nullable = false)
+    // 수정 시각
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 }

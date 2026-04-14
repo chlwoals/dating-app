@@ -1,3 +1,6 @@
+/**
+ * AuthService 비즈니스 로직
+ */
 package com.dating.backend.service;
 
 import com.dating.backend.config.JwtUtil;
@@ -44,7 +47,6 @@ public class AuthService {
     private final FraudDetectionService fraudDetectionService;
     private final BlockedIdentityService blockedIdentityService;
 
-    // ?뚯썝媛????怨꾩젙怨?湲곕낯 ?꾨줈???몄쬆 ?뺣낫瑜??④퍡 ?앹꽦?쒕떎.
     @Transactional
     public AuthResponse signup(SignupRequest request) {
         validateAdultSignup(request);
@@ -53,20 +55,20 @@ public class AuthService {
         User existingUser = userRepository.findByEmail(request.getEmail()).orElse(null);
 
         if (existingUser == null && userRepository.existsByNickname(request.getNickname())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "?대? ?ъ슜 以묒씤 ?됰꽕?꾩엯?덈떎.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다.");
         }
 
         if (existingUser != null
                 && !request.getNickname().equals(existingUser.getNickname())
                 && userRepository.existsByNickname(request.getNickname())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "?대? ?ъ슜 以묒씤 ?됰꽕?꾩엯?덈떎.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다.");
         }
 
         if (existingUser != null) {
             if (hasLocalPassword(existingUser)) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
-                        "?대? 媛?낇븳 ?대찓?쇱엯?덈떎. 濡쒓렇?명븯嫄곕굹 鍮꾨?踰덊샇 ?ъ꽕?뺤쓣 ?댁슜?댁＜?몄슂."
+                        "이미 가입된 이메일입니다. 다른 이메일을 사용해 주세요."
                 );
             }
 
@@ -74,7 +76,7 @@ public class AuthService {
             existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
             existingUser.setProvider(PROVIDER_BOTH);
             existingUser.setStatus("PENDING_REVIEW");
-            existingUser.setReviewComment("?꾨줈???ъ쭊 ?ъ궗 ?湲?以묒엯?덈떎. 3???대궡???꾨줈?꾧낵 ?ъ쭊 ?깅줉???꾨즺?댁＜?몄슂.");
+            existingUser.setReviewComment("회원 가입 심사 대기 중입니다. 3일 내에 사진 등록과 프로필 입력을 완료해 주세요.");
             existingUser.setReviewDeadlineAt(accountReviewPolicyService.createSignupDeadline());
             existingUser.setDeletedAt(null);
             clearResetToken(existingUser);
@@ -91,7 +93,7 @@ public class AuthService {
                 .nickname(request.getNickname())
                 .provider(PROVIDER_LOCAL)
                 .status("PENDING_REVIEW")
-                .reviewComment("?꾨줈???ъ쭊 ?ъ궗 ?湲?以묒엯?덈떎. 3???대궡???꾨줈?꾧낵 ?ъ쭊 ?깅줉???꾨즺?댁＜?몄슂.")
+                .reviewComment("회원 가입 심사 대기 중입니다. 3일 내에 사진 등록과 프로필 입력을 완료해 주세요.")
                 .reviewDeadlineAt(accountReviewPolicyService.createSignupDeadline())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
@@ -103,56 +105,54 @@ public class AuthService {
         return new AuthResponse(jwtUtil.createToken(savedUser.getEmail()), UserResponse.from(savedUser));
     }
 
-    // ?대찓??濡쒓렇???깃났 ??JWT瑜?諛쒓툒?쒕떎.
     @Transactional(readOnly = true)
     public AuthResponse login(AuthRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED,
-                        "가입되지 않은 이메일이거나 비밀번호가 올바르지 않습니다."
+                        "이메일 또는 비밀번호가 올바르지 않습니다."
                 ));
 
         blockedIdentityService.validateLoginAllowed(user);
 
         if ("SUSPENDED".equals(user.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "운영 정책상 이용이 제한된 계정입니다.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "정지된 계정입니다. 고객센터에 문의해 주세요.");
         }
 
         if ("DELETED".equals(user.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "기한 내 프로필 또는 사진 등록을 완료하지 않아 계정이 정리되었습니다.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "탈퇴 처리된 계정입니다. 새로운 계정으로 가입해 주세요.");
         }
 
         if ("HIGH_RISK".equals(user.getFraudReviewStatus())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "운영 정책상 이용이 제한된 계정입니다.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "스캠 의심 계정으로 분류되어 로그인할 수 없습니다.");
         }
 
         if (!hasLocalPassword(user)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "이 계정은 소셜 로그인 전용입니다. 동일한 이메일로 비밀번호 연결 후 로그인해주세요."
+                    "소셜 가입 계정입니다. 이메일 로그인 대신 소셜 로그인을 이용해 주세요."
             );
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "가입되지 않은 이메일이거나 비밀번호가 올바르지 않습니다."
+                    "이메일 또는 비밀번호가 올바르지 않습니다."
             );
         }
 
         return new AuthResponse(jwtUtil.createToken(user.getEmail()), UserResponse.from(user));
     }
 
-    // 鍮꾨?踰덊샇 ?ъ꽕???좏겙??諛쒓툒?쒕떎.
     @Transactional
     public PasswordResetRequestResponse requestPasswordReset(ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "?낅젰???대찓?쇰줈 媛?낇븳 怨꾩젙??李얠쓣 ???놁뒿?덈떎."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "가입된 이메일을 찾을 수 없습니다."));
 
         if (!hasLocalPassword(user)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "??怨꾩젙? ?뚯뀥 濡쒓렇???꾩슜?낅땲?? ?숈씪 ?대찓?쇰줈 鍮꾨?踰덊샇 ?곌껐 ??吏꾪뻾?댁＜?몄슂."
+                    "소셜 가입 계정은 비밀번호 재설정을 지원하지 않습니다."
             );
         }
 
@@ -162,20 +162,19 @@ public class AuthService {
         userRepository.save(user);
 
         return new PasswordResetRequestResponse(
-                "鍮꾨?踰덊샇 ?ъ꽕???좏겙??諛쒓툒?덉뒿?덈떎. ?꾩옱??媛쒕컻 ?④퀎???묐떟?쇰줈 諛붾줈 諛섑솚?⑸땲??",
+                "비밀번호 재설정 토큰을 발급했습니다. 30분 내에 변경을 완료해 주세요.",
                 token
         );
     }
 
-    // ?ъ꽕???좏겙???좏슚?섎㈃ ??鍮꾨?踰덊샇濡?援먯껜?쒕떎.
     @Transactional
     public MessageResponse confirmPasswordReset(PasswordResetConfirmRequest request) {
         User user = userRepository.findByResetPasswordToken(request.getToken())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "?좏슚?섏? ?딆? ?ъ꽕???좏겙?낅땲??"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 비밀번호 재설정 요청입니다."));
 
         if (user.getResetPasswordTokenExpiresAt() == null
                 || user.getResetPasswordTokenExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "?ъ꽕???좏겙??留뚮즺?섏뿀?듬땲?? ?ㅼ떆 ?붿껌?댁＜?몄슂.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "비밀번호 재설정 링크가 만료되었습니다. 다시 요청해 주세요.");
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -183,7 +182,7 @@ public class AuthService {
         clearResetToken(user);
         userRepository.save(user);
 
-        return new MessageResponse("鍮꾨?踰덊샇媛 ?깃났?곸쑝濡?蹂寃쎈릺?덉뒿?덈떎. ??鍮꾨?踰덊샇濡?濡쒓렇?명빐二쇱꽭??");
+        return new MessageResponse("비밀번호가 정상적으로 변경되었습니다. 새 비밀번호로 로그인해 주세요.");
     }
 
     private void upsertProfile(User user, SignupRequest request) {
@@ -240,7 +239,7 @@ public class AuthService {
     private void validateAdultSignup(SignupRequest request) {
         LocalDate adultThreshold = LocalDate.now().minusYears(19);
         if (request.getBirthDate().isAfter(adultThreshold)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "留?19???댁긽留?媛?낇븷 ???덉뒿?덈떎.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "만 19세 미만은 가입할 수 없습니다.");
         }
     }
 

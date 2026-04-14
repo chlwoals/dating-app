@@ -1,3 +1,6 @@
+/**
+ * UserResponse 요청/응답 DTO
+ */
 package com.dating.backend.dto;
 
 import com.dating.backend.entity.User;
@@ -10,11 +13,17 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class UserResponse {
 
+    // 유저 ID
     private Long id;
+    // 이메일
     private String email;
+    // 닉네임
     private String nickname;
+    // 가입 경로
     private String provider;
+    // 계정 상태
     private String status;
+    // 심사 마감일
     private LocalDateTime reviewDeadlineAt;
 
     public static UserResponse from(User user) {

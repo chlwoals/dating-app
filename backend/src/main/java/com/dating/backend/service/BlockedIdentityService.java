@@ -1,3 +1,6 @@
+/**
+ * BlockedIdentityService 비즈니스 로직
+ */
 package com.dating.backend.service;
 
 import com.dating.backend.dto.BlockedIdentityResponse;
@@ -32,22 +35,22 @@ public class BlockedIdentityService {
     @Transactional(readOnly = true)
     public void validateSignupAllowed(String email, String phone) {
         if (isBlocked(TYPE_EMAIL, normalize(email))) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "운영 정책상 가입이 제한된 계정입니다.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "차단된 이메일입니다. 가입할 수 없습니다.");
         }
 
         if (phone != null && !phone.isBlank() && isBlocked(TYPE_PHONE, normalize(phone))) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "운영 정책상 가입이 제한된 계정입니다.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "차단된 전화번호입니다. 가입할 수 없습니다.");
         }
     }
 
     @Transactional(readOnly = true)
     public void validateLoginAllowed(User user) {
         if (isBlocked(TYPE_EMAIL, normalize(user.getEmail()))) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "운영 정책상 이용이 제한된 계정입니다.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "차단된 계정입니다. 로그인할 수 없습니다.");
         }
 
         if (user.getPhone() != null && !user.getPhone().isBlank() && isBlocked(TYPE_PHONE, normalize(user.getPhone()))) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "운영 정책상 이용이 제한된 계정입니다.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "차단된 계정입니다. 로그인할 수 없습니다.");
         }
     }
 
@@ -130,7 +133,7 @@ public class BlockedIdentityService {
     @Transactional
     public void releaseBlockedIdentity(Long blockedIdentityId) {
         BlockedIdentity identity = blockedIdentityRepository.findById(blockedIdentityId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "차단 식별값을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "차단된 신원 정보를 찾을 수 없습니다."));
 
         identity.setActive(false);
         identity.setUpdatedAt(LocalDateTime.now());
@@ -141,7 +144,7 @@ public class BlockedIdentityService {
                     .userId(identity.getSourceUserId())
                     .riskType("IDENTITY_UNBLOCKED")
                     .score(0)
-                    .detail(identity.getIdentityType() + " 재가입 차단이 운영자에 의해 해제되었습니다.")
+                    .detail(identity.getIdentityType() + " 차단이 해제되었습니다.")
                     .build());
         }
     }
@@ -160,7 +163,7 @@ public class BlockedIdentityService {
                         .build());
 
         identity.setSourceUserId(sourceUserId);
-        identity.setReason(reason == null || reason.isBlank() ? "운영자 판단으로 재가입이 차단되었습니다." : reason);
+        identity.setReason(reason == null || reason.isBlank() ? "운영자 판단으로 차단되었습니다." : reason);
         identity.setActive(true);
         identity.setUpdatedAt(LocalDateTime.now());
         blockedIdentityRepository.save(identity);
@@ -170,7 +173,7 @@ public class BlockedIdentityService {
                     .userId(sourceUserId)
                     .riskType("IDENTITY_BLOCKED")
                     .score(100)
-                    .detail(identity.getIdentityType() + " 재가입 차단: " + identity.getReason())
+                    .detail(identity.getIdentityType() + " 차단: " + identity.getReason())
                     .build());
         }
         return type;
@@ -193,7 +196,7 @@ public class BlockedIdentityService {
                                 .userId(identity.getSourceUserId())
                                 .riskType("IDENTITY_UNBLOCKED")
                                 .score(0)
-                                .detail(identity.getIdentityType() + " 재가입 차단이 운영자에 의해 해제되었습니다.")
+                                .detail(identity.getIdentityType() + " 차단이 해제되었습니다.")
                                 .build());
                     }
                 });

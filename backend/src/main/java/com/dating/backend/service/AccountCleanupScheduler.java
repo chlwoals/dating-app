@@ -1,3 +1,6 @@
+/**
+ * AccountCleanupScheduler 비즈니스 로직
+ */
 package com.dating.backend.service;
 
 import com.dating.backend.entity.User;
@@ -18,7 +21,6 @@ public class AccountCleanupScheduler {
 
     private final UserRepository userRepository;
 
-    // 심사 대기 또는 반려 상태가 기한을 넘기면 계정을 자동 정리한다.
     @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void cleanupExpiredReviewAccounts() {
@@ -36,10 +38,10 @@ public class AccountCleanupScheduler {
             user.setStatus("DELETED");
             user.setDeletedAt(now);
             user.setReviewDeadlineAt(null);
-            user.setReviewComment("기한 내에 사진 또는 프로필 정보를 완료하지 않아 계정이 자동 정리되었습니다.");
+            user.setReviewComment("심사 기한 내에 프로필과 사진 등록을 완료하지 않아 계정이 삭제되었습니다.");
         });
 
         userRepository.saveAll(expiredUsers);
-        log.info("자동 정리된 계정 수: {}", expiredUsers.size());
+        log.info("심사 기한 초과로 계정 삭제 처리: {}건", expiredUsers.size());
     }
 }

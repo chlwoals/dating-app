@@ -1,5 +1,5 @@
 /**
- * UserProfileImage JPA 엔티티
+ * PhoneVerification JPA 엔티티
  */
 package com.dating.backend.entity;
 
@@ -18,38 +18,47 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_profile_images")
+@Table(name = "phone_verifications")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserProfileImage {
+public class PhoneVerification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    // 사진 ID
+    // 인증 ID
     private Long id;
 
-    @Column(nullable = false)
-    // 유저 ID
-    private Long userId;
+    @Column(nullable = false, length = 20)
+    // 휴대폰 번호
+    private String phone;
 
-    @Column(nullable = false, length = 500)
-    // 이미지 URL
-    private String imageUrl;
-
-    @Column(nullable = false)
-    // 사진 순서
-    private Integer imageOrder;
+    @Column(nullable = false, length = 10)
+    // 인증 코드
+    private String code;
 
     @Column(nullable = false)
-    // 대표 사진 여부
+    // 만료 시각
+    private LocalDateTime expiresAt;
+
+    @Column(nullable = false)
+    // 인증 성공 여부
     @Builder.Default
-    private Boolean isMain = false;
+    private Boolean verified = false;
+
+    @Column
+    // 인증 완료 시각
+    private LocalDateTime verifiedAt;
 
     @Column(nullable = false)
-    // 등록 시각
+    // 시도 횟수
+    @Builder.Default
+    private Integer attemptCount = 0;
+
+    @Column(nullable = false)
+    // 요청 생성 시각
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 }

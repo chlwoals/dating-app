@@ -1,3 +1,6 @@
+/**
+ * PasswordResetRequestResponse 요청/응답 DTO
+ */
 package com.dating.backend.dto;
 
 import lombok.Getter;

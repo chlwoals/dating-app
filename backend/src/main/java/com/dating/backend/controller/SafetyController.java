@@ -1,3 +1,6 @@
+/**
+ * SafetyController API 엔드포인트
+ */
 package com.dating.backend.controller;
 
 import com.dating.backend.dto.UserReportRequest;
@@ -18,7 +21,6 @@ public class SafetyController {
 
     private final SafetyService safetyService;
 
-    // 사용자가 의심 계정을 신고하면 운영 검토용 신고 이력을 남긴다.
     @PostMapping("/reports")
     public UserReportResponse reportUser(
             Authentication authentication,

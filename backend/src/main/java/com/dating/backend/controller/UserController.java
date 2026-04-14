@@ -1,3 +1,6 @@
+/**
+ * UserController API 엔드포인트
+ */
 package com.dating.backend.controller;
 
 import com.dating.backend.dto.UserResponse;
@@ -21,6 +24,6 @@ public class UserController {
 
         return userRepository.findByEmail(email)
                 .map(UserResponse::from)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
     }
 }

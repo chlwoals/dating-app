@@ -1,3 +1,6 @@
+/**
+ * AdminReviewService 비즈니스 로직
+ */
 package com.dating.backend.service;
 
 import com.dating.backend.dto.AdminMemoRequest;
@@ -66,7 +69,6 @@ public class AdminReviewService {
         );
     }
 
-    // 상태, 검색어, 성별, 프로필 완성 여부, 마감 임박 여부를 기준으로 심사 대상을 조회한다.
     @Transactional(readOnly = true)
     public List<AdminReviewCandidateResponse> getCandidates(
             String status,
@@ -81,7 +83,6 @@ public class AdminReviewService {
         LocalDateTime dueSoonThreshold = LocalDateTime.now().plusDays(1);
 
         return userRepository.findByStatusOrderByCreatedAtAsc(normalizedStatus).stream()
-                // 가입 중간 데이터가 비어 있어도 관리자 목록 전체가 404로 깨지지 않게 안전하게 변환한다.
                 .map(this::toCandidateResponseSafely)
                 .flatMap(Optional::stream)
                 .filter(candidate -> !dueSoonOnly || (candidate.getReviewDeadlineAt() != null && !candidate.getReviewDeadlineAt().isAfter(dueSoonThreshold)))
@@ -125,7 +126,7 @@ public class AdminReviewService {
         }
 
         if ("HIGH_RISK".equals(user.getFraudReviewStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "고위험 스캠 의심 계정은 승인할 수 없습니다. 먼저 스캠 모니터링에서 확인해 주세요.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "고위험 스캠 의심 계정은 승인할 수 없습니다. 스캠 모니터링에서 먼저 확인해 주세요.");
         }
 
         user.setStatus("ACTIVE");
@@ -255,6 +256,6 @@ public class AdminReviewService {
 
     private User getUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
     }
 }

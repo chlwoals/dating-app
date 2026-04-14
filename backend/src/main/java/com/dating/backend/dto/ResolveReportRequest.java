@@ -1,3 +1,6 @@
+/**
+ * ResolveReportRequest 요청/응답 DTO
+ */
 package com.dating.backend.dto;
 
 import jakarta.validation.constraints.NotBlank;
@@ -8,6 +11,7 @@ import lombok.Setter;
 @Setter
 public class ResolveReportRequest {
 
-    @NotBlank(message = "처리 메모를 입력해주세요.")
+    @NotBlank(message = "처리 메모를 입력해 주세요.")
+    // 운영자 메모
     private String adminNote;
 }

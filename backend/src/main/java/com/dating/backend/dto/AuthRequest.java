@@ -1,3 +1,6 @@
+/**
+ * AuthRequest 요청/응답 DTO
+ */
 package com.dating.backend.dto;
 
 import jakarta.validation.constraints.Email;
@@ -11,8 +14,10 @@ public class AuthRequest {
 
     @Email
     @NotBlank
+    // 이메일
     private String email;
 
     @NotBlank
+    // 비밀번호
     private String password;
 }

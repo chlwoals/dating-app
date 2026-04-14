@@ -1,3 +1,6 @@
+/**
+ * ProfileService 비즈니스 로직
+ */
 package com.dating.backend.service;
 
 import com.dating.backend.dto.MyProfileResponse;
@@ -28,7 +31,6 @@ public class ProfileService {
     private final AccountReviewPolicyService accountReviewPolicyService;
     private final FraudDetectionService fraudDetectionService;
 
-    // 로그인한 사용자의 계정, 프로필, 인증 정보를 한 번에 조회한다.
     @Transactional(readOnly = true)
     public MyProfileResponse getMyProfile(String email) {
         User user = getUserByEmail(email);
@@ -38,7 +40,6 @@ public class ProfileService {
         return buildProfileResponse(user, profile, verification);
     }
 
-    // 프로필 수정 화면의 값을 users, user_profiles, user_verifications에 반영한다.
     @Transactional
     public MyProfileResponse updateMyProfile(String email, UpdateMyProfileRequest request) {
         User user = getUserByEmail(email);
@@ -119,7 +120,7 @@ public class ProfileService {
 
     private User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
     }
 
     private String emptyToNull(String value) {

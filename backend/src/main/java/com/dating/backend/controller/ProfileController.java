@@ -1,3 +1,6 @@
+/**
+ * ProfileController API 엔드포인트
+ */
 package com.dating.backend.controller;
 
 import com.dating.backend.dto.MyProfileResponse;
@@ -17,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ProfileController {
 
-    // 내 프로필 조회/수정 흐름을 담당한다.
     private final ProfileService profileService;
 
     @GetMapping("/me")

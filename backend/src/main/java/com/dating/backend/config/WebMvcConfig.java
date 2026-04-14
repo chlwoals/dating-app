@@ -1,3 +1,6 @@
+/**
+ * WebMvcConfig 설정
+ */
 package com.dating.backend.config;
 
 import lombok.RequiredArgsConstructor;
@@ -15,7 +18,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     private final UploadProperties uploadProperties;
 
-    // 업로드된 프로필 사진을 /uploads/** URL로 바로 조회할 수 있게 매핑한다.
+    // 업로드 파일 정적 리소스 경로 등록
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String configuredDir = StringUtils.hasText(uploadProperties.dir()) ? uploadProperties.dir() : "uploads";

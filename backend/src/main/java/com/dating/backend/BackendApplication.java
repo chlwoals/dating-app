@@ -1,3 +1,6 @@
+/**
+ * BackendApplication 모듈
+ */
 package com.dating.backend;
 
 import com.dating.backend.config.UploadProperties;

@@ -1,3 +1,6 @@
+/**
+ * SecurityConfig 설정
+ */
 package com.dating.backend.config;
 
 import lombok.RequiredArgsConstructor;
@@ -28,7 +31,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/api/admin/**", "/oauth2/**", "/login/oauth2/**", "/uploads/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(oauth2 -> oauth2.successHandler(oAuth2SuccessHandler))
+                // JWT 인증 필터 추가
                 .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

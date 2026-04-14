@@ -1,3 +1,6 @@
+/**
+ * UserProfileImageRequest 요청/응답 DTO
+ */
 package com.dating.backend.dto;
 
 import jakarta.validation.constraints.Max;
@@ -14,13 +17,16 @@ public class UserProfileImageRequest {
 
     @NotBlank
     @Size(max = 500)
+    // 이미지 URL
     private String imageUrl;
 
     @NotNull
     @Min(1)
     @Max(5)
+    // 사진 순서
     private Integer imageOrder;
 
     @NotNull
+    // 대표 사진 여부
     private Boolean isMain;
 }

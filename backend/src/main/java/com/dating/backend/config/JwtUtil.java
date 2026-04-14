@@ -1,3 +1,6 @@
+/**
+ * JwtUtil 설정
+ */
 package com.dating.backend.config;
 
 import io.jsonwebtoken.Jwts;

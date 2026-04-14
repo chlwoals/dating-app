@@ -1,3 +1,6 @@
+/**
+ * CorsConfig 설정
+ */
 package com.dating.backend.config;
 
 import org.springframework.context.annotation.Bean;
@@ -15,7 +18,7 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 로컬 PC와 같은 와이파이에 연결된 휴대폰에서도 개발 서버를 볼 수 있게 허용한다.
+        // 허용할 프론트엔드 도메인 목록
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
@@ -39,6 +42,7 @@ public class CorsConfig {
                 "http://10.*:*"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // 모든 요청 헤더 허용
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);

@@ -1,3 +1,6 @@
+/**
+ * UserRepository JPA 리포지토리
+ */
 package com.dating.backend.repository;
 
 import com.dating.backend.entity.User;
@@ -23,6 +26,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByFraudReviewStatus(String fraudReviewStatus);
 
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByPhone(String phone);
 
     Optional<User> findByResetPasswordToken(String resetPasswordToken);
 

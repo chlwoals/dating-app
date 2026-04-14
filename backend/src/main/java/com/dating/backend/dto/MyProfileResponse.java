@@ -1,3 +1,6 @@
+/**
+ * MyProfileResponse 요청/응답 DTO
+ */
 package com.dating.backend.dto;
 
 import com.dating.backend.entity.User;
@@ -13,26 +16,43 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MyProfileResponse {
 
-    // 프론트 프로필 화면에서 바로 쓰기 좋도록 계정/프로필/인증 정보를 하나로 합친 응답 DTO다.
-
+    // 유저 ID
     private Long userId;
+    // 이메일
     private String email;
+    // 닉네임
     private String nickname;
+    // 계정 상태
     private String status;
+    // 가입 경로
     private String provider;
+    // 심사 코멘트
     private String reviewComment;
+    // 생년월일
     private LocalDate birthDate;
+    // 성별
     private String gender;
+    // 본인 인증 여부
     private Boolean isVerified;
+    // 본인 인증 시각
     private LocalDateTime verifiedAt;
+    // 거주 지역
     private String region;
+    // 직업
     private String job;
+// MBTI
     private String mbti;
+    // 성격
     private String personality;
+    // 이상형
     private String idealType;
+    // 자기소개
     private String introduction;
+    // 흡연 여부
     private String smokingStatus;
+    // 음주 여부
     private String drinkingStatus;
+    // 종교
     private String religion;
 
     public static MyProfileResponse from(User user, UserProfile profile, UserVerification verification) {

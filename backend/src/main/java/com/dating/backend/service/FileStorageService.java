@@ -1,3 +1,6 @@
+/**
+ * FileStorageService 비즈니스 로직
+ */
 package com.dating.backend.service;
 
 import com.dating.backend.config.UploadProperties;
@@ -23,15 +26,14 @@ public class FileStorageService {
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
     private final UploadProperties uploadProperties;
 
-    // 업로드한 프로필 사진을 로컬 디렉터리에 저장하고 접근 가능한 경로를 반환한다.
     public String storeProfileImage(Long userId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "업로드할 이미지 파일이 필요합니다.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "업로드할 파일을 선택해 주세요.");
         }
 
         String extension = extractExtension(file.getOriginalFilename());
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "jpg, jpeg, png, webp 파일만 업로드할 수 있습니다.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "jpg, jpeg, png, webp 형식만 업로드할 수 있습니다.");
         }
 
         try {
@@ -50,7 +52,7 @@ public class FileStorageService {
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
             return "/uploads/profile/" + filename;
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 저장에 실패했습니다.");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 저장 중 오류가 발생했습니다.");
         }
     }
 

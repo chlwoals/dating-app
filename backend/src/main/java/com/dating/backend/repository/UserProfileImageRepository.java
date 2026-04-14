@@ -1,3 +1,6 @@
+/**
+ * UserProfileImageRepository JPA 리포지토리
+ */
 package com.dating.backend.repository;
 
 import com.dating.backend.entity.UserProfileImage;

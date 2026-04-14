@@ -1,3 +1,6 @@
+/**
+ * AccountReviewPolicyService 비즈니스 로직
+ */
 package com.dating.backend.service;
 
 import com.dating.backend.entity.UserProfile;
@@ -22,7 +25,6 @@ public class AccountReviewPolicyService {
         return LocalDateTime.now().plusDays(REJECT_RETRY_DEADLINE_DAYS);
     }
 
-    // 심사 대상이 되려면 프로필 필수 소개 문구와 기본 정보가 모두 채워져 있어야 한다.
     public boolean isProfileComplete(UserProfile profile, UserVerification verification) {
         return hasText(profile.getRegion())
                 && hasText(profile.getJob())
@@ -54,9 +56,9 @@ public class AccountReviewPolicyService {
 
         long remainingDays = calculateRemainingDays(reviewDeadlineAt);
         if (remainingDays == 0) {
-            return "오늘 안에 필수 정보를 완료하지 않으면 계정이 자동 정리될 수 있습니다.";
+            return "심사 기한이 오늘까지입니다. 프로필과 사진 등록을 완료하지 않으면 계정이 삭제될 수 있습니다.";
         }
-        return "필수 정보를 " + remainingDays + "일 안에 완료하지 않으면 계정이 자동 정리될 수 있습니다.";
+        return "심사 기한이 " + remainingDays + "일 남았습니다. 프로필과 사진 등록을 완료하지 않으면 계정이 삭제될 수 있습니다.";
     }
 
     private boolean hasText(String value) {

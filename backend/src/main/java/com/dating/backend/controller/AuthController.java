@@ -1,3 +1,6 @@
+/**
+ * AuthController API 엔드포인트
+ */
 package com.dating.backend.controller;
 
 import com.dating.backend.dto.AuthRequest;
@@ -6,8 +9,12 @@ import com.dating.backend.dto.ForgotPasswordRequest;
 import com.dating.backend.dto.MessageResponse;
 import com.dating.backend.dto.PasswordResetConfirmRequest;
 import com.dating.backend.dto.PasswordResetRequestResponse;
+import com.dating.backend.dto.PhoneVerificationConfirmRequest;
+import com.dating.backend.dto.PhoneVerificationRequest;
+import com.dating.backend.dto.PhoneVerificationStartResponse;
 import com.dating.backend.dto.SignupRequest;
 import com.dating.backend.service.AuthService;
+import com.dating.backend.service.PhoneAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,8 +27,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-    // 인증 관련 실제 비즈니스 로직은 서비스 계층에 모아두고 컨트롤러는 입출력만 담당한다.
     private final AuthService authService;
+    private final PhoneAuthService phoneAuthService;
 
     @PostMapping("/signup")
     public AuthResponse signup(@Valid @RequestBody SignupRequest request) {
@@ -31,6 +38,16 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody AuthRequest request) {
         return authService.login(request);
+    }
+
+    @PostMapping("/phone/request")
+    public PhoneVerificationStartResponse requestPhoneVerification(@Valid @RequestBody PhoneVerificationRequest request) {
+        return phoneAuthService.requestCode(request);
+    }
+
+    @PostMapping("/phone/verify")
+    public AuthResponse verifyPhoneAndLogin(@Valid @RequestBody PhoneVerificationConfirmRequest request) {
+        return phoneAuthService.verifyAndLogin(request);
     }
 
     @PostMapping("/password/reset/request")

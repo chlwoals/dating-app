@@ -1,3 +1,6 @@
+/**
+ * SafetyService 비즈니스 로직
+ */
 package com.dating.backend.service;
 
 import com.dating.backend.dto.AdminRiskActionRequest;
@@ -44,14 +47,14 @@ public class SafetyService {
     public UserReportResponse reportUser(String reporterEmail, UserReportRequest request) {
         User reporter = getUserByEmail(reporterEmail);
         User reportedUser = userRepository.findById(request.getReportedUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "?좉퀬 ????ъ슜?먮? 李얠쓣 ???놁뒿?덈떎."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "신고 대상 유저를 찾을 수 없습니다."));
 
         if (reporter.getId().equals(reportedUser.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "蹂몄씤 怨꾩젙? ?좉퀬?????놁뒿?덈떎.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "자기 자신을 신고할 수 없습니다.");
         }
 
         if (userReportRepository.existsByReporterUserIdAndReportedUserIdAndStatus(reporter.getId(), reportedUser.getId(), "OPEN")) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "?대? 泥섎━ 以묒씤 ?좉퀬媛 ?덉뒿?덈떎.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리되지 않은 신고가 존재합니다.");
         }
 
         UserReport saved = userReportRepository.save(UserReport.builder()
@@ -74,7 +77,7 @@ public class SafetyService {
 
     public void validateAdminKey(String adminKey) {
         if (adminKey == null || !adminReviewKey.equals(adminKey)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "?댁쁺???몄쬆 ?ㅺ? ?щ컮瑜댁? ?딆뒿?덈떎.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "운영자 인증 키가 올바르지 않습니다.");
         }
     }
 
@@ -101,7 +104,7 @@ public class SafetyService {
                     String latestRiskDetail = fraudRiskLogRepository.findTop20ByUserIdOrderByCreatedAtDesc(user.getId()).stream()
                             .findFirst()
                             .map(FraudRiskLog::getDetail)
-                            .orElse("理쒓렐 ?꾪뿕 濡쒓렇媛 ?놁뒿?덈떎.");
+                            .orElse("최근 위험 로그가 없습니다.");
 
                     return new ScamMonitorUserResponse(
                             user.getId(),
@@ -147,7 +150,7 @@ public class SafetyService {
     @Transactional
     public MessageResponse reviewRiskUser(Long userId, AdminRiskActionRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "?ъ슜?먮? 李얠쓣 ???놁뒿?덈떎."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
 
         String action = request.getAction().toUpperCase(Locale.ROOT);
         String note = request.getAdminNote();
@@ -159,7 +162,7 @@ public class SafetyService {
                 if ("SUSPENDED".equals(user.getStatus())) {
                     user.setStatus("ACTIVE");
                 }
-                user.setReviewComment("운영 검토 중입니다.");
+                user.setReviewComment("스캠 모니터링 결과 정상으로 변경되었습니다.");
             }
             case "MARK_WATCH" -> {
                 user.setFraudReviewStatus("WATCH");
@@ -169,26 +172,26 @@ public class SafetyService {
                 if ("SUSPENDED".equals(user.getStatus())) {
                     user.setStatus("ACTIVE");
                 }
-                user.setReviewComment("운영 검토 중입니다.");
+                user.setReviewComment("스캠 의심 계정으로 모니터링 중입니다.");
             }
             case "SUSPEND_ACCOUNT" -> {
                 user.setStatus("SUSPENDED");
                 if ("NORMAL".equals(user.getFraudReviewStatus())) {
                     user.setFraudReviewStatus("WATCH");
                 }
-                user.setReviewComment("운영 정책상 이용이 제한되었습니다.");
+                user.setReviewComment("스캠 의심 계정으로 분류되어 계정이 제한되었습니다.");
             }
             case "RELEASE_ACCOUNT" -> {
                 user.setStatus("ACTIVE");
                 if ("HIGH_RISK".equals(user.getFraudReviewStatus())) {
                     user.setFraudReviewStatus("WATCH");
                 }
-                user.setReviewComment("운영 검토 중입니다.");
+                user.setReviewComment("스캠 모니터링 조치가 해제되었습니다.");
             }
             case "BLOCK_IDENTITY" -> {
                 user.setStatus("SUSPENDED");
                 user.setFraudReviewStatus("HIGH_RISK");
-                user.setReviewComment("운영 정책상 이용이 제한되었습니다.");
+                user.setReviewComment("스캠 의심 계정으로 분류되어 계정이 제한되었습니다.");
                 blockedIdentityService.blockUserIdentities(user, note);
             }
             case "UNBLOCK_IDENTITY" -> {
@@ -199,9 +202,9 @@ public class SafetyService {
                 if ("HIGH_RISK".equals(user.getFraudReviewStatus())) {
                     user.setFraudReviewStatus("WATCH");
                 }
-                user.setReviewComment("운영 검토 중입니다.");
+                user.setReviewComment("스캠 모니터링 조치가 해제되었습니다.");
             }
-            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지원하지 않는 처리 액션입니다.");
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지원하지 않는 조치입니다.");
         }
 
         user.setAdminMemo(note);
@@ -213,7 +216,7 @@ public class SafetyService {
                 .detail(note)
                 .build());
 
-        return new MessageResponse("위험 계정 검토 결과를 반영했습니다.");
+        return new MessageResponse("스캠 모니터링 조치를 저장했습니다.");
     }
 
     @Transactional(readOnly = true)
@@ -236,21 +239,19 @@ public class SafetyService {
     @Transactional
     public MessageResponse resolveReport(Long reportId, ResolveReportRequest request) {
         UserReport report = userReportRepository.findById(reportId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "?좉퀬 ?대젰??李얠쓣 ???놁뒿?덈떎."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."));
         report.setStatus("RESOLVED");
         report.setAdminNote(request.getAdminNote());
         userReportRepository.save(report);
-        return new MessageResponse("?좉퀬 ?대젰??泥섎━ ?꾨즺濡?蹂寃쎈릺?덉뒿?덈떎.");
+        return new MessageResponse("신고가 처리되었습니다.");
     }
 
     private User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "?ъ슜?먮? 李얠쓣 ???놁뒿?덈떎."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
     }
 
     private boolean contains(String value, String query) {
         return value != null && value.toLowerCase(Locale.ROOT).contains(query);
     }
 }
-
-
