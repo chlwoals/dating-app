@@ -1,5 +1,20 @@
 <template>
   <section class="auth-page">
+    <div
+      v-if="showIntro"
+      :class="['intro-stage', { leaving: introLeaving }]"
+      role="status"
+      aria-live="polite"
+    >
+      <div :key="currentIntroStep.id" class="intro-copy">
+        <p class="intro-kicker">{{ currentIntroStep.label }}</p>
+        <h1>{{ currentIntroStep.text }}</h1>
+        <p v-if="currentIntroStep.subtext" class="intro-subtext">{{ currentIntroStep.subtext }}</p>
+        <span class="intro-line" aria-hidden="true"></span>
+      </div>
+      <button class="intro-skip" type="button" @click="skipIntro">바로 로그인</button>
+    </div>
+
     <div class="auth-card">
       <p class="eyebrow">Dating App</p>
       <h1>로그인</h1>
@@ -67,7 +82,7 @@
 </template>
 
 <script setup>
-import { nextTick, reactive, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import api from "../../api/api";
 import { clearToken, setToken } from "../../utils/auth";
@@ -82,6 +97,45 @@ const emailInput = ref(null);
 const passwordInput = ref(null);
 const phoneInput = ref(null);
 const codeInput = ref(null);
+const showIntro = ref(true);
+const introLeaving = ref(false);
+const introStepIndex = ref(0);
+const introTimers = [];
+const introSteps = [
+  {
+    id: "visit",
+    label: "질문",
+    text: "오늘 들어 왔어요?",
+    subtext: "처음 온 마음도 편하게 머물 수 있게요.",
+  },
+  {
+    id: "visit-answer",
+    label: "대답",
+    text: "네. 오늘은 조금 설레도 괜찮아요.",
+    subtext: "좋은 대화는 천천히 시작되니까요.",
+  },
+  {
+    id: "type",
+    label: "질문",
+    text: "어떤 사람을 만나고 싶나요?",
+    subtext: "조건보다 먼저, 마음이 편한 사람.",
+  },
+  {
+    id: "type-answer",
+    label: "대답",
+    text: "대화가 잘 통하는 사람부터요.",
+    subtext: "웃는 타이밍이 비슷하면 더 좋고요.",
+  },
+  {
+    id: "date",
+    label: "마지막 질문",
+    text: "저랑 데이트 하실래요?",
+    subtext: "괜찮다면 로그인하고 이어가요.",
+  },
+];
+const introStepDuration = 1900;
+
+const currentIntroStep = computed(() => introSteps[introStepIndex.value]);
 
 const form = reactive({
   email: "",
@@ -91,6 +145,46 @@ const form = reactive({
 const phoneForm = reactive({
   phone: "",
   code: "",
+});
+
+function clearIntroTimers() {
+  introTimers.forEach((timer) => window.clearTimeout(timer));
+  introTimers.length = 0;
+}
+
+function skipIntro() {
+  clearIntroTimers();
+  showIntro.value = false;
+}
+
+function finishIntroWithFade() {
+  introLeaving.value = true;
+  introTimers.push(window.setTimeout(() => {
+    showIntro.value = false;
+  }, 1200));
+}
+
+onMounted(() => {
+  const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  if (prefersReducedMotion) {
+    skipIntro();
+    return;
+  }
+
+  introSteps.slice(1).forEach((_, index) => {
+    introTimers.push(window.setTimeout(() => {
+      introStepIndex.value = index + 1;
+    }, introStepDuration * (index + 1)));
+  });
+
+  introTimers.push(window.setTimeout(
+    finishIntroWithFade,
+    introStepDuration * introSteps.length + 500,
+  ));
+});
+
+onUnmounted(() => {
+  clearIntroTimers();
 });
 
 function moveAfterLogin(data) {
@@ -244,12 +338,119 @@ async function verifyPhoneAndLogin() {
 
 <style scoped>
 .auth-page {
+  position: relative;
+  overflow: hidden;
   min-height: 100vh;
   display: flex;
   align-items: stretch;
   justify-content: center;
   padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
   background: transparent;
+}
+
+.intro-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.92) 0 11%, transparent 12%),
+    radial-gradient(circle at 86% 78%, rgba(255, 247, 240, 0.9) 0 14%, transparent 15%),
+    linear-gradient(135deg, #ffe3d6 0%, #ffaf95 52%, #f3775f 100%);
+}
+
+.intro-stage.leaving {
+  animation: introExit 1200ms ease forwards;
+}
+
+.intro-stage::before,
+.intro-stage::after {
+  position: absolute;
+  content: "";
+  width: min(54vw, 320px);
+  height: min(54vw, 320px);
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  transform: rotate(12deg);
+}
+
+.intro-stage::before {
+  top: -92px;
+  left: -72px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.intro-stage::after {
+  right: -96px;
+  bottom: -88px;
+  background: rgba(96, 39, 27, 0.08);
+}
+
+.intro-copy {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 560px);
+  color: #331b16;
+  text-align: left;
+  animation: introScene 1900ms ease both;
+}
+
+.intro-kicker {
+  width: fit-content;
+  margin: 0 0 18px;
+  padding: 9px 13px;
+  border: 1px solid rgba(72, 35, 27, 0.18);
+  border-radius: 8px;
+  color: #7b3325;
+  background: rgba(255, 255, 255, 0.44);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.intro-copy h1 {
+  margin: 0;
+  max-width: 11ch;
+  color: #311912;
+  font-size: clamp(2.75rem, 12vw, 5.5rem);
+  line-height: 0.98;
+  word-break: keep-all;
+}
+
+.intro-subtext {
+  max-width: 32ch;
+  margin: 20px 0 0;
+  color: #5d3027;
+  font-size: clamp(1rem, 4vw, 1.25rem);
+  font-weight: 800;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.intro-line {
+  display: block;
+  width: min(72vw, 360px);
+  height: 4px;
+  margin-top: 24px;
+  border-radius: 999px;
+  background: #311912;
+  transform-origin: left center;
+  animation: introLineIn 640ms cubic-bezier(0.22, 1, 0.36, 1) 240ms both;
+}
+
+.intro-skip {
+  position: absolute;
+  right: 18px;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 2;
+  border: 1px solid rgba(67, 31, 24, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.44);
+  color: #4d2118;
+  font-weight: 900;
+  cursor: pointer;
 }
 
 .auth-card {
@@ -426,6 +627,60 @@ input {
 
   .helper-row {
     flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-stage,
+  .intro-copy,
+  .intro-kicker,
+  .intro-copy h1,
+  .intro-line {
+    animation: none;
+  }
+}
+
+@keyframes introScene {
+  0% {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateY(18px) scale(0.985);
+  }
+  18% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+  72% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateY(-16px) scale(1.01);
+  }
+}
+
+@keyframes introLineIn {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes introExit {
+  0% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(10px);
+    visibility: hidden;
   }
 }
 </style>
