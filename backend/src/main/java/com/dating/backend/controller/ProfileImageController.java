@@ -65,4 +65,9 @@ public class ProfileImageController {
     public ReviewStatusResponse getReviewStatus(Authentication authentication) {
         return profileImageService.getReviewStatus(authentication.getName());
     }
+
+    @PostMapping("/review-submit")
+    public ReviewStatusResponse submitReview(Authentication authentication) {
+        return profileImageService.submitReview(authentication.getName());
+    }
 }

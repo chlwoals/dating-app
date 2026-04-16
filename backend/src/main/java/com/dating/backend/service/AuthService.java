@@ -130,7 +130,7 @@ public class AuthService {
         if (!hasLocalPassword(user)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "소셜 가입 계정입니다. 이메일 로그인 대신 소셜 로그인을 이용해 주세요."
+                    "이메일 비밀번호로 가입한 계정이 아닙니다. 가입했던 방식으로 로그인해 주세요."
             );
         }
 

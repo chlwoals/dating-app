@@ -1,6 +1,6 @@
 <template>
   <section class="review-page">
-    <div class="review-card">
+    <div class="review-card" :class="{ 'review-card--locked': showReviewLock }">
       <p class="eyebrow">Review Process</p>
       <h1>가입 심사 대기</h1>
       <p class="description">{{ reviewStatus.message }}</p>
@@ -76,7 +76,7 @@
         </label>
 
         <button class="primary-button" :disabled="loading || !canUploadMore || reviewStatus.status === 'DELETED'">
-          {{ loading ? '등록 중...' : '사진 등록' }}
+          {{ loading ? '저장 중...' : uploadButtonLabel }}
         </button>
       </form>
 
@@ -93,8 +93,18 @@
       </div>
 
       <div class="helper-row">
-        <button class="secondary-button" @click="refreshStatus" type="button">상태 새로고침</button>
+        <button class="secondary-button" @click="submitReviewRequest" type="button" :disabled="loading || reviewStatus.status === 'DELETED'">
+          {{ reviewActionLabel }}
+        </button>
         <button class="secondary-button" @click="logout" type="button">로그아웃</button>
+      </div>
+    </div>
+
+    <div v-if="showReviewLock" class="review-lock-overlay" role="status" aria-live="polite">
+      <div class="review-lock-modal">
+        <span class="lock-kicker">Review</span>
+        <strong>심사 중 입니다.</strong>
+        <p>{{ reviewLockMessage }}</p>
       </div>
     </div>
   </section>
@@ -116,6 +126,9 @@ const message = ref("");
 const errorMessage = ref("");
 const images = ref([]);
 const fileInputRef = ref(null);
+const reviewSubmitted = ref(false);
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:8082/api`;
+const assetBaseUrl = apiBaseUrl.replace(/\/api\/?$/, "");
 const reviewStatus = ref({
   status: "PENDING_REVIEW",
   imageCount: 0,
@@ -148,6 +161,28 @@ const remainingRequiredImages = computed(() => Math.max(0, 2 - images.value.leng
 const canUploadMore = computed(() => images.value.length < 5);
 const uploadProgressPercent = computed(() => (images.value.length / 5) * 100);
 const showDeadlineWarning = computed(() => ["PENDING_REVIEW", "REJECTED"].includes(reviewStatus.value.status));
+const canSubmitReview = computed(() => (
+  ["PENDING_REVIEW", "REJECTED"].includes(reviewStatus.value.status)
+  && reviewStatus.value.profileComplete
+  && reviewStatus.value.readyForReview
+));
+const showReviewLock = computed(() => canSubmitReview.value && (reviewStatus.value.status === "PENDING_REVIEW" || reviewSubmitted.value));
+const reviewActionLabel = computed(() => (reviewStatus.value.status === "REJECTED" ? "재심사 신청" : "가입 신청"));
+const reviewLockMessage = computed(() => (
+  reviewStatus.value.status === "REJECTED"
+    ? "재심사 신청이 접수되었습니다. 운영자 확인이 끝날 때까지 잠시 기다려주세요."
+    : "가입 신청이 접수되었습니다. 운영자 확인이 끝날 때까지 잠시 기다려주세요."
+));
+const projectedImageCountAfterSave = computed(() => {
+  const replacesExistingOrder = images.value.some((image) => image.imageOrder === form.imageOrder);
+  return replacesExistingOrder ? images.value.length : images.value.length + 1;
+});
+const uploadButtonLabel = computed(() => {
+  const willMeetMinimum = projectedImageCountAfterSave.value >= 2;
+  if (reviewStatus.value.status === "REJECTED" && willMeetMinimum) return "사진 저장 후 재심사 신청";
+  if (willMeetMinimum) return "사진 저장 후 가입 신청";
+  return "사진 저장";
+});
 const deadlineClass = computed(() => {
   if (reviewStatus.value.remainingDays === 0) return "danger-box";
   if (reviewStatus.value.remainingDays === 1) return "warning-box";
@@ -190,6 +225,9 @@ const refreshStatus = async () => {
     ]);
     reviewStatus.value = statusRes.data;
     images.value = imagesRes.data;
+    reviewSubmitted.value = reviewStatus.value.status === "PENDING_REVIEW"
+      && reviewStatus.value.profileComplete
+      && reviewStatus.value.readyForReview;
     form.imageOrder = nextAvailableOrder.value;
 
     if (reviewStatus.value.status === "ACTIVE") {
@@ -198,6 +236,40 @@ const refreshStatus = async () => {
   } catch (error) {
     clearToken();
     router.replace("/");
+  }
+};
+
+const submitReviewRequest = async () => {
+  message.value = "";
+  errorMessage.value = "";
+
+  if (!reviewStatus.value.profileComplete) {
+    errorMessage.value = "프로필 필수 항목을 먼저 모두 입력해주세요.";
+    window.alert(errorMessage.value);
+    router.push("/profile");
+    return;
+  }
+
+  if (!reviewStatus.value.readyForReview) {
+    errorMessage.value = "가입 신청을 위해 대표 사진 포함 최소 2장을 등록해주세요.";
+    window.alert(errorMessage.value);
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const wasRejected = reviewStatus.value.status === "REJECTED";
+    const { data } = await api.post("/profile-images/review-submit");
+    reviewStatus.value = data;
+    reviewSubmitted.value = true;
+    message.value = wasRejected
+      ? "재심사 신청이 접수되었습니다."
+      : "가입 신청이 접수되었습니다.";
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || "심사 신청에 실패했습니다.";
+    window.alert(errorMessage.value);
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -222,8 +294,9 @@ const saveImage = async () => {
       },
     });
     images.value = data;
-    message.value = data.length >= 2
-      ? "사진을 등록했습니다. 심사 대기 상태를 유지하면서 추가 사진도 계속 등록할 수 있습니다."
+    const meetsMinimumImages = data.length >= 2;
+    message.value = meetsMinimumImages
+      ? "사진을 저장했습니다. 심사 신청 조건을 확인하는 중입니다."
       : `사진을 등록했습니다. 승인 심사를 위해 사진 ${Math.max(0, 2 - data.length)}장을 더 등록해주세요.`;
     form.file = null;
     form.imageOrder = nextAvailableOrder.value;
@@ -232,6 +305,9 @@ const saveImage = async () => {
       fileInputRef.value.value = "";
     }
     await refreshStatus();
+    if (meetsMinimumImages) {
+      await submitReviewRequest();
+    }
   } catch (error) {
     errorMessage.value = error.response?.data?.message || error.message || "사진 등록에 실패했습니다.";
   } finally {
@@ -253,7 +329,7 @@ const toAbsoluteImageUrl = (path) => {
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
   }
-  return `http://${window.location.hostname}:8080${path}`;
+  return `${assetBaseUrl}${path}`;
 };
 
 onMounted(async () => {
@@ -270,6 +346,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .review-page {
+  position: relative;
   min-height: 100vh;
   padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
   display: flex;
@@ -288,6 +365,57 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(240, 206, 193, 0.9);
   box-shadow: 0 24px 50px rgba(98, 49, 34, 0.14);
   backdrop-filter: blur(18px);
+  transition: filter 0.24s ease, transform 0.24s ease, opacity 0.24s ease;
+}
+
+.review-card--locked {
+  filter: blur(8px);
+  opacity: 0.46;
+  pointer-events: none;
+  user-select: none;
+}
+
+.review-lock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(50, 29, 22, 0.18);
+}
+
+.review-lock-modal {
+  width: min(100%, 320px);
+  padding: 22px 20px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(226, 189, 173, 0.96);
+  box-shadow: 0 20px 46px rgba(55, 28, 20, 0.18);
+  text-align: center;
+}
+
+.lock-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: #a94f31;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.review-lock-modal strong {
+  display: block;
+  color: #35231a;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.review-lock-modal p {
+  margin: 10px 0 18px;
+  color: #735448;
+  line-height: 1.55;
 }
 
 .eyebrow {
@@ -451,6 +579,12 @@ select {
   background: #fff;
   color: #4d3129;
   border: 1px solid #e6c1b4;
+}
+
+.secondary-button:disabled {
+  cursor: not-allowed;
+  background: #eee0d8;
+  color: #96796d;
 }
 
 .message {

@@ -57,7 +57,8 @@ public class PhoneAuthService {
 
         return new PhoneVerificationStartResponse(
                 "인증 코드가 발송되었습니다. 개발 환경에서는 서버 로그의 [DEV PHONE AUTH] 항목에서 코드를 확인할 수 있습니다.",
-                expiresAt
+                expiresAt,
+                code
         );
     }
 

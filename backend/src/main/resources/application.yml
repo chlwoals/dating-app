@@ -30,3 +30,6 @@ app:
     review-key: change-admin-review-key
   upload:
     dir: uploads
+  firebase:
+    enabled: ${FIREBASE_ENABLED:false}
+    service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}

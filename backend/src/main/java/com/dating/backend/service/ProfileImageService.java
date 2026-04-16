@@ -107,6 +107,42 @@ public class ProfileImageService {
         );
     }
 
+    @Transactional
+    public ReviewStatusResponse submitReview(String email) {
+        User user = getUserByEmail(email);
+        UserProfile profile = userProfileRepository.findByUserId(user.getId()).orElse(null);
+        UserVerification verification = userVerificationRepository.findByUserId(user.getId()).orElse(null);
+        long imageCount = userProfileImageRepository.countByUserId(user.getId());
+
+        if ("ACTIVE".equals(user.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 승인된 계정입니다.");
+        }
+        if ("DELETED".equals(user.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "삭제된 계정은 심사를 신청할 수 없습니다.");
+        }
+        if (!"PENDING_REVIEW".equals(user.getStatus()) && !"REJECTED".equals(user.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "현재 상태에서는 심사를 신청할 수 없습니다.");
+        }
+        if (profile == null || verification == null || !accountReviewPolicyService.isProfileComplete(profile, verification)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "프로필 필수 항목을 모두 입력해야 심사를 신청할 수 있습니다.");
+        }
+        if (imageCount < 2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "대표 사진 포함 최소 2장을 등록해야 심사를 신청할 수 있습니다.");
+        }
+
+        boolean wasRejected = "REJECTED".equals(user.getStatus());
+        user.setStatus("PENDING_REVIEW");
+        user.setProfileCompletedAt(LocalDateTime.now());
+        user.setReviewDeadlineAt(accountReviewPolicyService.createSignupDeadline());
+        user.setLastWarningSentAt(null);
+        user.setReviewComment(wasRejected
+                ? "재심사 신청이 접수되었습니다. 운영자 확인 후 승인 여부가 결정됩니다."
+                : "가입 신청이 접수되었습니다. 운영자 확인 후 승인 여부가 결정됩니다.");
+        userRepository.saveAndFlush(user);
+
+        return getReviewStatus(email);
+    }
+
     @Transactional(readOnly = true)
     public Long getUserId(String email) {
         return getUserByEmail(email).getId();

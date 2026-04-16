@@ -6,6 +6,7 @@ package com.dating.backend.controller;
 import com.dating.backend.dto.AuthRequest;
 import com.dating.backend.dto.AuthResponse;
 import com.dating.backend.dto.ForgotPasswordRequest;
+import com.dating.backend.dto.FirebaseGoogleLoginRequest;
 import com.dating.backend.dto.MessageResponse;
 import com.dating.backend.dto.PasswordResetConfirmRequest;
 import com.dating.backend.dto.PasswordResetRequestResponse;
@@ -14,6 +15,7 @@ import com.dating.backend.dto.PhoneVerificationRequest;
 import com.dating.backend.dto.PhoneVerificationStartResponse;
 import com.dating.backend.dto.SignupRequest;
 import com.dating.backend.service.AuthService;
+import com.dating.backend.service.FirebaseGoogleAuthService;
 import com.dating.backend.service.PhoneAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final PhoneAuthService phoneAuthService;
+    private final FirebaseGoogleAuthService firebaseGoogleAuthService;
 
     @PostMapping("/signup")
     public AuthResponse signup(@Valid @RequestBody SignupRequest request) {
@@ -48,6 +51,11 @@ public class AuthController {
     @PostMapping("/phone/verify")
     public AuthResponse verifyPhoneAndLogin(@Valid @RequestBody PhoneVerificationConfirmRequest request) {
         return phoneAuthService.verifyAndLogin(request);
+    }
+
+    @PostMapping("/firebase/google")
+    public AuthResponse loginWithFirebaseGoogle(@Valid @RequestBody FirebaseGoogleLoginRequest request) {
+        return firebaseGoogleAuthService.loginWithGoogle(request.getIdToken());
     }
 
     @PostMapping("/password/reset/request")

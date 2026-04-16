@@ -58,27 +58,27 @@
 
           <label>
             <span>직업</span>
-            <input v-model.trim="form.job" type="text" maxlength="100" />
+            <input v-model.trim="form.job" type="text" maxlength="100" required />
           </label>
 
           <label>
             <span>MBTI</span>
-            <input v-model.trim="form.mbti" type="text" maxlength="4" />
+            <input v-model.trim="form.mbti" type="text" maxlength="4" required />
           </label>
 
           <label>
             <span>성격</span>
-            <textarea v-model.trim="form.personality" rows="3"></textarea>
+            <textarea v-model.trim="form.personality" rows="3" required></textarea>
           </label>
 
           <label>
             <span>이상형</span>
-            <textarea v-model.trim="form.idealType" rows="3"></textarea>
+            <textarea v-model.trim="form.idealType" rows="3" required></textarea>
           </label>
 
           <label>
             <span>자기소개</span>
-            <textarea v-model.trim="form.introduction" rows="4"></textarea>
+            <textarea v-model.trim="form.introduction" rows="4" required></textarea>
           </label>
 
           <div class="triple-grid">
@@ -170,6 +170,7 @@ const providerLabel = computed(() => {
   const provider = profile.value?.provider;
   if (provider === "BOTH") return "이메일 + Google";
   if (provider === "GOOGLE") return "Google";
+  if (provider === "PHONE") return "전화번호";
   return "이메일";
 });
 
@@ -234,7 +235,16 @@ async function loadProfile() {
 function validateProfile() {
   if (!form.nickname.trim()) return "닉네임을 입력해주세요.";
   if (!form.birthDate) return "생년월일을 입력해주세요.";
+  if (!form.gender) return "성별을 선택해주세요.";
   if (!form.region.trim()) return "거주 지역을 입력해주세요.";
+  if (!form.job.trim()) return "직업을 입력해주세요.";
+  if (!form.mbti.trim()) return "MBTI를 입력해주세요.";
+  if (!form.personality.trim()) return "성격을 입력해주세요.";
+  if (!form.idealType.trim()) return "이상형을 입력해주세요.";
+  if (!form.introduction.trim()) return "자기소개를 입력해주세요.";
+  if (!form.smokingStatus) return "흡연 여부를 선택해주세요.";
+  if (!form.drinkingStatus) return "음주 여부를 선택해주세요.";
+  if (!form.religion) return "종교를 선택해주세요.";
   return "";
 }
 
@@ -264,7 +274,10 @@ async function saveProfile() {
 
     const { data } = await api.put("/profile/me", payload);
     hydrateForm(data);
-    saveMessage.value = "프로필을 저장했어요.";
+    saveMessage.value = "프로필을 저장했어요. 다음 단계에서 심사용 사진을 등록해 주세요.";
+    if (data.status !== "ACTIVE") {
+      router.push("/review-pending");
+    }
   } catch (error) {
     saveError.value = error.response?.data?.message || "프로필 저장에 실패했습니다.";
   } finally {

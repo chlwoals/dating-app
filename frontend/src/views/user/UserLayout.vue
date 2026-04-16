@@ -50,7 +50,8 @@ onMounted(async () => {
       return;
     }
 
-    if (data.status !== "ACTIVE") {
+    // 심사 전 계정도 프로필 필수 항목은 입력할 수 있어야 하므로 프로필 화면은 허용한다.
+    if (data.status !== "ACTIVE" && route.path !== "/profile") {
       router.replace("/review-pending");
       return;
     }

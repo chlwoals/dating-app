@@ -68,6 +68,13 @@
       <p v-if="noticeMessage" class="message notice">{{ noticeMessage }}</p>
       <p v-if="errorMessage" class="message error">{{ errorMessage }}</p>
 
+      <div class="social-login-box">
+        <span class="divider-label">또는</span>
+        <button class="google-button" type="button" :disabled="loading" @click="loginWithGoogle">
+          {{ loading ? 'Google 확인 중...' : 'Google로 계속하기' }}
+        </button>
+      </div>
+
       <div class="helper-row">
         <RouterLink to="/reset-password">비밀번호를 잊으셨나요?</RouterLink>
         <RouterLink to="/signup">이메일 회원가입</RouterLink>
@@ -85,6 +92,7 @@
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import api from "../../api/api";
+import { signInWithGooglePopup } from "../../api/firebase";
 import { clearToken, setToken } from "../../utils/auth";
 
 const router = useRouter();
@@ -249,7 +257,7 @@ const login = async () => {
 
   try {
     const { data } = await api.post("/auth/login", form);
-    await moveAfterPhoneLogin(data);
+    moveAfterLogin(data);
   } catch (error) {
     clearToken();
     const message = resolveLoginErrorMessage(error);
@@ -285,7 +293,10 @@ async function requestPhoneCode() {
 
   try {
     const { data } = await api.post("/auth/phone/request", { phone: phoneForm.phone });
-    noticeMessage.value = data.message || "인증번호를 서버 로그에 기록했습니다.";
+    phoneForm.code = "";
+    noticeMessage.value = data.devCode
+      ? `개발용 인증번호: ${data.devCode}`
+      : data.message || "인증번호를 서버 로그에 기록했습니다.";
     await nextTick();
     codeInput.value?.focus();
   } catch (error) {
@@ -322,14 +333,35 @@ async function verifyPhoneAndLogin() {
       phone: phoneForm.phone,
       code: phoneForm.code,
     });
-    moveAfterLogin(data);
+    await moveAfterPhoneLogin(data);
   } catch (error) {
     clearToken();
-    errorMessage.value = error.response?.data?.message || "전화번호 인증에 실패했습니다.";
+    const serverMessage = error.response?.data?.message;
+    errorMessage.value = serverMessage
+      ? `${serverMessage} 새 인증번호를 발급한 뒤 다시 입력해 주세요.`
+      : "전화번호 인증에 실패했습니다. 새 인증번호를 발급한 뒤 다시 입력해 주세요.";
     window.alert(errorMessage.value);
     await nextTick();
     codeInput.value?.focus();
     codeInput.value?.select?.();
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function loginWithGoogle() {
+  loading.value = true;
+  errorMessage.value = "";
+  noticeMessage.value = "";
+
+  try {
+    const idToken = await signInWithGooglePopup();
+    const { data } = await api.post("/auth/firebase/google", { idToken });
+    await moveAfterPhoneLogin(data);
+  } catch (error) {
+    clearToken();
+    errorMessage.value = error.response?.data?.message || error.message || "Google 로그인에 실패했습니다.";
+    window.alert(errorMessage.value);
   } finally {
     loading.value = false;
   }
@@ -573,6 +605,49 @@ input {
 
 .notice {
   color: #276749;
+}
+
+.social-login-box {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.divider-label {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  color: #9c7669;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.divider-label::before,
+.divider-label::after {
+  content: "";
+  height: 1px;
+  background: #efd2c5;
+}
+
+.google-button {
+  width: 100%;
+  border: 1px solid rgba(82, 55, 45, 0.14);
+  border-radius: 18px;
+  padding: 15px 16px;
+  background: #ffffff;
+  color: #33231e;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(74, 45, 34, 0.08);
+}
+
+.google-button:disabled,
+.primary-button:disabled,
+.ghost-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
 }
 
 .helper-row {
