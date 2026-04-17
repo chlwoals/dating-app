@@ -15,6 +15,9 @@
 
       <nav class="bottom-nav" aria-label="사용자 하단 내비게이션">
         <RouterLink v-for="item in navItems" :key="item.to" :to="item.to" class="nav-item" :class="{ active: route.path === item.to }">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path :d="item.icon" />
+          </svg>
           <span class="nav-label">{{ item.label }}</span>
         </RouterLink>
       </nav>
@@ -33,10 +36,26 @@ const router = useRouter();
 const checking = ref(true);
 
 const navItems = [
-  { to: "/home", label: "홈" },
-  { to: "/today", label: "오늘의 인연" },
-  { to: "/chats", label: "채팅" },
-  { to: "/profile", label: "프로필" },
+  {
+    to: "/home",
+    label: "홈",
+    icon: "M3.75 11.25 12 4.5l8.25 6.75v8.25a.75.75 0 0 1-.75.75h-5.25v-5.5h-4.5v5.5H4.5a.75.75 0 0 1-.75-.75v-8.25Z",
+  },
+  {
+    to: "/today",
+    label: "오늘의 인연",
+    icon: "M12 20.25S4.5 15.88 4.5 9.9A4.1 4.1 0 0 1 8.6 5.75c1.4 0 2.63.7 3.4 1.76a4.1 4.1 0 0 1 3.4-1.76 4.1 4.1 0 0 1 4.1 4.15c0 5.98-7.5 10.35-7.5 10.35Z",
+  },
+  {
+    to: "/chats",
+    label: "채팅",
+    icon: "M5.25 5.25h13.5a1.5 1.5 0 0 1 1.5 1.5v8.25a1.5 1.5 0 0 1-1.5 1.5H10.5l-4.95 3.3a.75.75 0 0 1-1.17-.62V16.5h-.63a1.5 1.5 0 0 1-1.5-1.5V6.75a1.5 1.5 0 0 1 1.5-1.5Zm2.25 4.13a.88.88 0 1 0 0 1.75.88.88 0 0 0 0-1.75Zm4.5 0a.88.88 0 1 0 0 1.75.88.88 0 0 0 0-1.75Zm4.5 0a.88.88 0 1 0 0 1.75.88.88 0 0 0 0-1.75Z",
+  },
+  {
+    to: "/profile",
+    label: "프로필",
+    icon: "M12 12.25a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 1.75c-4.05 0-7.25 2.28-7.25 5.08 0 .65.52 1.17 1.17 1.17h12.16c.65 0 1.17-.52 1.17-1.17 0-2.8-3.2-5.08-7.25-5.08Z",
+  },
 ];
 
 onMounted(async () => {
@@ -106,6 +125,7 @@ onMounted(async () => {
 .nav-item {
   display: grid;
   place-items: center;
+  gap: 4px;
   min-height: 58px;
   padding: 8px 6px;
   border-radius: 20px;
@@ -115,6 +135,16 @@ onMounted(async () => {
 .nav-item.active {
   background: linear-gradient(180deg, rgba(234, 143, 100, 0.26), rgba(213, 111, 78, 0.18));
   color: #fff8f5;
+}
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+  opacity: 0.9;
+}
+.nav-item.active .nav-icon {
+  opacity: 1;
+  filter: drop-shadow(0 4px 8px rgba(245, 191, 164, 0.22));
 }
 .nav-label { font-size: 11px; font-weight: 700; line-height: 1.1; text-align: center; }
 </style>
