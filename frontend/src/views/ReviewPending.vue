@@ -266,7 +266,7 @@ const toAbsoluteImageUrl = (path) => {
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
   }
-  return `http://${window.location.hostname}:8080${path}`;
+  return `http://${window.location.hostname}:8082${path}`;
 };
 
 onMounted(async () => {

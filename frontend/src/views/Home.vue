@@ -480,7 +480,7 @@ onMounted(async () => {
 function resolveImageUrl(imageUrl) {
   if (!imageUrl) return "";
   if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) return imageUrl;
-  return `http://${window.location.hostname}:8080${imageUrl}`;
+  return `http://${window.location.hostname}:8082${imageUrl}`;
 }
 
 function scrollToSection(sectionId) {

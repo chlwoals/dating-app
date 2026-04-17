@@ -9,7 +9,7 @@ function resolveApiBaseUrl() {
   }
 
   const hostname = window.location.hostname || "localhost";
-  return `http://${hostname}:8080/api`;
+  return `http://${hostname}:8082/api`;
 }
 
 const api = axios.create({
