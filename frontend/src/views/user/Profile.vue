@@ -168,10 +168,8 @@ const form = reactive({
 
 const providerLabel = computed(() => {
   const provider = profile.value?.provider;
-  if (provider === "BOTH") return "이메일 + Google";
-  if (provider === "GOOGLE") return "Google";
   if (provider === "PHONE") return "전화번호";
-  return "이메일";
+  return "자체 이메일";
 });
 
 function hydrateForm(data) {

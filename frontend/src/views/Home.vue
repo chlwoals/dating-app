@@ -304,16 +304,14 @@ const profileCompletion = computed(() => {
 
 const providerLabel = computed(() => {
   const provider = profile.value?.provider;
-  if (provider === "BOTH") return "이메일 + Google";
-  if (provider === "GOOGLE") return "Google";
-  return "이메일";
+  if (provider === "PHONE") return "전화번호";
+  return "자체 이메일";
 });
 
 const providerMessage = computed(() => {
   const provider = profile.value?.provider;
-  if (provider === "BOTH") return "두 로그인 방식을 모두 사용할 수 있어요.";
-  if (provider === "GOOGLE") return "현재는 Google 계정과 연결되어 있어요.";
-  return "현재는 이메일 로그인으로 연결되어 있어요.";
+  if (provider === "PHONE") return "현재는 전화번호 인증 로그인으로 연결되어 있어요.";
+  return "현재는 자체 이메일 로그인으로 연결되어 있어요.";
 });
 
 const statusLabel = computed(() => {

@@ -7,6 +7,12 @@ export const setToken = (token) => {
   localStorage.setItem(TOKEN_KEY, token);
 };
 
+export const setAuthTokens = ({ token }) => {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+};
+
 export const clearToken = () => {
   localStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem(SIGNUP_APPROVAL_NOTICE_KEY);

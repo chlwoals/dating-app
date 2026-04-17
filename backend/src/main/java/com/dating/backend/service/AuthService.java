@@ -27,7 +27,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -35,8 +34,6 @@ import java.util.UUID;
 public class AuthService {
 
     private static final String PROVIDER_LOCAL = "LOCAL";
-    private static final String PROVIDER_GOOGLE = "GOOGLE";
-    private static final String PROVIDER_BOTH = "BOTH";
 
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
@@ -46,10 +43,14 @@ public class AuthService {
     private final AccountReviewPolicyService accountReviewPolicyService;
     private final FraudDetectionService fraudDetectionService;
     private final BlockedIdentityService blockedIdentityService;
+    private final AuthVerificationService authVerificationService;
+    private final LoginAttemptService loginAttemptService;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public AuthResponse signup(SignupRequest request) {
         validateAdultSignup(request);
+        authVerificationService.validateSignupEmailVerified(request.getEmail(), request.getEmailVerificationToken());
         blockedIdentityService.validateSignupAllowed(request.getEmail(), null);
 
         User existingUser = userRepository.findByEmail(request.getEmail()).orElse(null);
@@ -74,7 +75,7 @@ public class AuthService {
 
             existingUser.setNickname(request.getNickname());
             existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
-            existingUser.setProvider(PROVIDER_BOTH);
+            existingUser.setProvider(PROVIDER_LOCAL);
             existingUser.setStatus("PENDING_REVIEW");
             existingUser.setReviewComment("회원 가입 심사 대기 중입니다. 3일 내에 사진 등록과 프로필 입력을 완료해 주세요.");
             existingUser.setReviewDeadlineAt(accountReviewPolicyService.createSignupDeadline());
@@ -85,7 +86,7 @@ public class AuthService {
             upsertProfile(linkedUser, request);
             upsertVerification(linkedUser, request);
             fraudDetectionService.evaluateUserProfile(linkedUser.getId());
-            return new AuthResponse(jwtUtil.createToken(linkedUser.getEmail()), UserResponse.from(linkedUser));
+            return buildAuthResponse(linkedUser);
         }
 
         User user = User.builder()
@@ -102,16 +103,20 @@ public class AuthService {
         upsertProfile(savedUser, request);
         upsertVerification(savedUser, request);
         fraudDetectionService.evaluateUserProfile(savedUser.getId());
-        return new AuthResponse(jwtUtil.createToken(savedUser.getEmail()), UserResponse.from(savedUser));
+        return buildAuthResponse(savedUser);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse login(AuthRequest request) {
+        loginAttemptService.validateNotLocked(request.getEmail());
+
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED,
-                        "이메일 또는 비밀번호가 올바르지 않습니다."
-                ));
+                .orElse(null);
+
+        if (user == null) {
+            loginAttemptService.recordFailure(request.getEmail());
+            throw invalidLoginException();
+        }
 
         blockedIdentityService.validateLoginAllowed(user);
 
@@ -135,13 +140,12 @@ public class AuthService {
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "이메일 또는 비밀번호가 올바르지 않습니다."
-            );
+            loginAttemptService.recordFailure(request.getEmail());
+            throw invalidLoginException();
         }
 
-        return new AuthResponse(jwtUtil.createToken(user.getEmail()), UserResponse.from(user));
+        loginAttemptService.recordSuccess(request.getEmail());
+        return buildAuthResponse(user);
     }
 
     @Transactional
@@ -178,7 +182,7 @@ public class AuthService {
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setProvider(linkWithLocalProvider(user.getProvider()));
+        user.setProvider(PROVIDER_LOCAL);
         clearResetToken(user);
         userRepository.save(user);
 
@@ -247,12 +251,19 @@ public class AuthService {
         return user.getPassword() != null && !user.getPassword().isBlank();
     }
 
-    private String linkWithLocalProvider(String provider) {
-        String normalized = provider == null ? "" : provider.toUpperCase(Locale.ROOT);
-        if (PROVIDER_GOOGLE.equals(normalized) || PROVIDER_BOTH.equals(normalized)) {
-            return PROVIDER_BOTH;
-        }
-        return PROVIDER_LOCAL;
+    private ResponseStatusException invalidLoginException() {
+        return new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "이메일 또는 비밀번호가 올바르지 않습니다."
+        );
+    }
+
+    private AuthResponse buildAuthResponse(User user) {
+        return new AuthResponse(
+                jwtUtil.createToken(user.getEmail()),
+                refreshTokenService.issueRefreshToken(user),
+                UserResponse.from(user)
+        );
     }
 
     private void clearResetToken(User user) {

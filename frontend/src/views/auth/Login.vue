@@ -18,7 +18,7 @@
     <div class="auth-card">
       <p class="eyebrow">Dating App</p>
       <h1>로그인</h1>
-      <p class="description">이메일 또는 개발용 전화번호 인증으로 서비스를 시작해 보세요.</p>
+      <p class="description">이메일 또는 자체 SMS 전화번호 인증으로 서비스를 시작해 보세요.</p>
 
       <div class="tab-row" role="tablist" aria-label="로그인 방식 선택">
         <button type="button" :class="['tab-button', { active: loginMode === 'email' }]" @click="loginMode = 'email'">
@@ -52,28 +52,21 @@
         </label>
 
         <button class="ghost-button full" type="button" :disabled="phoneLoading" @click="requestPhoneCode">
-          {{ phoneLoading ? '인증번호 발급 중...' : '개발용 인증번호 발급' }}
+          {{ phoneLoading ? '인증번호 발급 중...' : 'SMS 인증번호 발급' }}
         </button>
 
         <label>
           <span>인증번호</span>
-          <input ref="codeInput" v-model.trim="phoneForm.code" inputmode="numeric" maxlength="6" placeholder="서버 로그의 6자리 번호" required />
+          <input ref="codeInput" v-model.trim="phoneForm.code" inputmode="numeric" maxlength="6" placeholder="6자리 인증번호" required />
         </label>
 
         <button class="primary-button" :disabled="loading">
-          {{ loading ? '확인 중...' : '전화번호로 자동 가입/로그인' }}
+          {{ loading ? '확인 중...' : '전화번호 인증 후 자동 가입/로그인' }}
         </button>
       </form>
 
       <p v-if="noticeMessage" class="message notice">{{ noticeMessage }}</p>
       <p v-if="errorMessage" class="message error">{{ errorMessage }}</p>
-
-      <div class="social-login-box">
-        <span class="divider-label">또는</span>
-        <button class="google-button" type="button" :disabled="loading" @click="loginWithGoogle">
-          {{ loading ? 'Google 확인 중...' : 'Google로 계속하기' }}
-        </button>
-      </div>
 
       <div class="helper-row">
         <RouterLink to="/reset-password">비밀번호를 잊으셨나요?</RouterLink>
@@ -81,8 +74,8 @@
       </div>
 
       <div class="policy-box">
-        <strong>개발용 전화 인증 안내</strong>
-        <p>실제 SMS 비용이 들지 않도록 인증번호는 백엔드 콘솔 로그에만 출력됩니다. `bootRun` 터미널에서 [DEV PHONE AUTH] 로그를 확인해 주세요.</p>
+        <strong>자체 SMS 인증 안내</strong>
+        <p>외부 문자 발송 서비스 없이 자체 인증 흐름만 사용합니다. 인증번호는 백엔드 콘솔의 [DEV SMS AUTH] 로그에서 확인해 주세요.</p>
       </div>
     </div>
   </section>
@@ -92,8 +85,7 @@
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import api from "../../api/api";
-import { signInWithGooglePopup } from "../../api/firebase";
-import { clearToken, setToken } from "../../utils/auth";
+import { clearToken, setAuthTokens } from "../../utils/auth";
 
 const router = useRouter();
 const loading = ref(false);
@@ -196,7 +188,7 @@ onUnmounted(() => {
 });
 
 function moveAfterLogin(data) {
-  setToken(data.token);
+  setAuthTokens(data);
 
   if (data.user?.status === "ACTIVE") {
     router.push("/home");
@@ -207,7 +199,7 @@ function moveAfterLogin(data) {
 }
 
 async function moveAfterPhoneLogin(data) {
-  setToken(data.token);
+  setAuthTokens(data);
 
   if (data.user?.status === "ACTIVE") {
     router.push("/home");
@@ -296,7 +288,7 @@ async function requestPhoneCode() {
     phoneForm.code = "";
     noticeMessage.value = data.devCode
       ? `개발용 인증번호: ${data.devCode}`
-      : data.message || "인증번호를 서버 로그에 기록했습니다.";
+      : data.message || "SMS 인증번호를 발송했습니다.";
     await nextTick();
     codeInput.value?.focus();
   } catch (error) {
@@ -349,23 +341,6 @@ async function verifyPhoneAndLogin() {
   }
 }
 
-async function loginWithGoogle() {
-  loading.value = true;
-  errorMessage.value = "";
-  noticeMessage.value = "";
-
-  try {
-    const idToken = await signInWithGooglePopup();
-    const { data } = await api.post("/auth/firebase/google", { idToken });
-    await moveAfterPhoneLogin(data);
-  } catch (error) {
-    clearToken();
-    errorMessage.value = error.response?.data?.message || error.message || "Google 로그인에 실패했습니다.";
-    window.alert(errorMessage.value);
-  } finally {
-    loading.value = false;
-  }
-}
 </script>
 
 <style scoped>
@@ -607,43 +582,6 @@ input {
   color: #276749;
 }
 
-.social-login-box {
-  margin-top: 18px;
-  display: grid;
-  gap: 12px;
-}
-
-.divider-label {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 12px;
-  color: #9c7669;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.divider-label::before,
-.divider-label::after {
-  content: "";
-  height: 1px;
-  background: #efd2c5;
-}
-
-.google-button {
-  width: 100%;
-  border: 1px solid rgba(82, 55, 45, 0.14);
-  border-radius: 18px;
-  padding: 15px 16px;
-  background: #ffffff;
-  color: #33231e;
-  font-size: 15px;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 12px 24px rgba(74, 45, 34, 0.08);
-}
-
-.google-button:disabled,
 .primary-button:disabled,
 .ghost-button:disabled {
   cursor: not-allowed;

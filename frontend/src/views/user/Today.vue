@@ -167,9 +167,8 @@ const profileCompletion = computed(() => {
 
 const providerLabel = computed(() => {
   const provider = profile.value?.provider;
-  if (provider === "BOTH") return "이메일 + Google";
-  if (provider === "GOOGLE") return "Google";
-  return "이메일";
+  if (provider === "PHONE") return "전화번호";
+  return "자체 이메일";
 });
 
 const statusLabel = computed(() => {

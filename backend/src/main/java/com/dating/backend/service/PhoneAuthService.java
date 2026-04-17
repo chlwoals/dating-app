@@ -14,7 +14,7 @@ import com.dating.backend.entity.User;
 import com.dating.backend.repository.PhoneVerificationRepository;
 import com.dating.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,24 +25,31 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class PhoneAuthService {
 
     private static final String PROVIDER_PHONE = "PHONE";
     private static final int CODE_TTL_MINUTES = 5;
     private static final int MAX_ATTEMPTS = 5;
+    private static final int MAX_REQUESTS_PER_WINDOW = 3;
+    private static final int REQUEST_WINDOW_MINUTES = 10;
 
     private final PhoneVerificationRepository phoneVerificationRepository;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final AccountReviewPolicyService accountReviewPolicyService;
     private final BlockedIdentityService blockedIdentityService;
+    private final RefreshTokenService refreshTokenService;
+    private final PhoneSmsSender phoneSmsSender;
     private final SecureRandom secureRandom = new SecureRandom();
+
+    @Value("${app.phone-auth.expose-dev-code:false}")
+    private boolean exposeDevCode;
 
     @Transactional
     public PhoneVerificationStartResponse requestCode(PhoneVerificationRequest request) {
         String phone = normalizePhone(request.getPhone());
         blockedIdentityService.validateSignupAllowed(null, phone);
+        validateRequestRateLimit(phone);
 
         String code = String.format("%06d", secureRandom.nextInt(1_000_000));
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(CODE_TTL_MINUTES);
@@ -53,12 +60,12 @@ public class PhoneAuthService {
                 .expiresAt(expiresAt)
                 .build());
 
-        log.info("[DEV PHONE AUTH] phone={}, code={}, expiresAt={}", phone, code, expiresAt);
+        phoneSmsSender.sendVerificationCode(phone, code, expiresAt);
 
         return new PhoneVerificationStartResponse(
-                "인증 코드가 발송되었습니다. 개발 환경에서는 서버 로그의 [DEV PHONE AUTH] 항목에서 코드를 확인할 수 있습니다.",
+                "SMS 인증번호가 발송되었습니다. 개발 환경에서는 서버 로그의 [DEV SMS AUTH] 항목에서 코드를 확인할 수 있습니다.",
                 expiresAt,
-                code
+                exposeDevCode ? code : null
         );
     }
 
@@ -97,7 +104,11 @@ public class PhoneAuthService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "계정 상태로 인해 로그인할 수 없습니다.");
         }
 
-        return new AuthResponse(jwtUtil.createToken(user.getEmail()), UserResponse.from(user));
+        return new AuthResponse(
+                jwtUtil.createToken(user.getEmail()),
+                refreshTokenService.issueRefreshToken(user),
+                UserResponse.from(user)
+        );
     }
 
     private User createPhoneUser(String phone) {
@@ -116,6 +127,14 @@ public class PhoneAuthService {
 
     private String normalizePhone(String phone) {
         return phone == null ? "" : phone.replaceAll("[^0-9]", "");
+    }
+
+    private void validateRequestRateLimit(String phone) {
+        LocalDateTime windowStart = LocalDateTime.now().minusMinutes(REQUEST_WINDOW_MINUTES);
+        long recentRequestCount = phoneVerificationRepository.countByPhoneAndCreatedAtAfter(phone, windowStart);
+        if (recentRequestCount >= MAX_REQUESTS_PER_WINDOW) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "인증번호 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.");
+        }
     }
 
     private String buildPhoneEmail(String phone) {

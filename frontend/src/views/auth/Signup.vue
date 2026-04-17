@@ -33,6 +33,28 @@
           />
         </label>
 
+        <div class="verification-box">
+          <button class="ghost-button" type="button" :disabled="loading || verificationLoading" @click="requestEmailVerification">
+            {{ verificationLoading ? "인증번호 발급 중..." : "이메일 인증번호 받기" }}
+          </button>
+
+          <label>
+            <span>이메일 인증번호</span>
+            <input
+              ref="emailCodeInput"
+              v-model.trim="emailVerificationCode"
+              inputmode="numeric"
+              maxlength="6"
+              placeholder="서버 로그의 6자리 번호"
+            />
+          </label>
+
+          <button class="ghost-button" type="button" :disabled="loading || verificationLoading || !emailVerificationCode" @click="confirmEmailVerification">
+            {{ emailVerified ? "이메일 인증 완료" : "인증번호 확인" }}
+          </button>
+          <p v-if="verificationMessage" class="message notice">{{ verificationMessage }}</p>
+        </div>
+
         <label>
           <span>비밀번호</span>
           <input
@@ -172,10 +194,10 @@
 </template>
 
 <script setup>
-import { computed, nextTick, reactive, ref } from "vue";
+import { computed, nextTick, reactive, ref, watch } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import api from "../../api/api";
-import { resetSignupApprovalNotice, setToken } from "../../utils/auth";
+import { resetSignupApprovalNotice, setAuthTokens } from "../../utils/auth";
 
 const mbtiOptions = [
   "INTJ", "INTP", "ENTJ", "ENTP",
@@ -206,9 +228,14 @@ const regionOptions = {
 
 const router = useRouter();
 const loading = ref(false);
+const verificationLoading = ref(false);
 const errorMessage = ref("");
+const verificationMessage = ref("");
+const emailVerificationCode = ref("");
+const emailVerified = ref(false);
 const nicknameInput = ref(null);
 const emailInput = ref(null);
+const emailCodeInput = ref(null);
 const passwordInput = ref(null);
 const birthDateInput = ref(null);
 const genderSelect = ref(null);
@@ -221,6 +248,7 @@ const selectedRegionDistrict = ref("");
 const form = reactive({
   nickname: "",
   email: "",
+  emailVerificationToken: "",
   password: "",
   birthDate: "",
   gender: "MALE",
@@ -245,10 +273,21 @@ const updateRegion = () => {
     : "";
 };
 
+const resetEmailVerification = () => {
+  form.emailVerificationToken = "";
+  emailVerificationCode.value = "";
+  emailVerified.value = false;
+  verificationMessage.value = "";
+};
+
 const handleRegionCityChange = () => {
   selectedRegionDistrict.value = "";
   updateRegion();
 };
+
+watch(() => form.email, () => {
+  resetEmailVerification();
+});
 
 const focusField = async (field) => {
   await nextTick();
@@ -256,6 +295,7 @@ const focusField = async (field) => {
   const focusTargets = {
     nickname: nicknameInput,
     email: emailInput,
+    emailCode: emailCodeInput,
     password: passwordInput,
     birthDate: birthDateInput,
     gender: genderSelect,
@@ -279,6 +319,13 @@ const validateForm = () => {
     return {
       field: "email",
       message: "이메일을 입력해주세요.",
+    };
+  }
+
+  if (!form.emailVerificationToken) {
+    return {
+      field: "emailCode",
+      message: "이메일 인증을 먼저 완료해주세요.",
     };
   }
 
@@ -330,6 +377,72 @@ const validateForm = () => {
   return null;
 };
 
+const requestEmailVerification = async () => {
+  verificationLoading.value = true;
+  errorMessage.value = "";
+  verificationMessage.value = "";
+  form.emailVerificationToken = "";
+  emailVerified.value = false;
+
+  try {
+    if (!form.email.trim()) {
+      window.alert("이메일을 먼저 입력해주세요.");
+      await focusField("email");
+      return;
+    }
+
+    const { data } = await api.post("/auth/verification/request", {
+      targetType: "EMAIL",
+      targetValue: form.email,
+      purpose: "SIGNUP",
+    });
+
+    verificationMessage.value = data.devCode
+      ? `개발용 이메일 인증번호: ${data.devCode}`
+      : data.message || "인증번호를 발급했습니다.";
+    await focusField("emailCode");
+  } catch (error) {
+    const message = error.response?.data?.message || "이메일 인증번호 발급에 실패했습니다.";
+    errorMessage.value = message;
+    window.alert(message);
+  } finally {
+    verificationLoading.value = false;
+  }
+};
+
+const confirmEmailVerification = async () => {
+  verificationLoading.value = true;
+  errorMessage.value = "";
+
+  try {
+    if (!emailVerificationCode.value) {
+      window.alert("이메일 인증번호를 입력해주세요.");
+      await focusField("emailCode");
+      return;
+    }
+
+    const { data } = await api.post("/auth/verification/confirm", {
+      targetType: "EMAIL",
+      targetValue: form.email,
+      purpose: "SIGNUP",
+      code: emailVerificationCode.value,
+    });
+
+    form.emailVerificationToken = data.verificationToken;
+    emailVerified.value = true;
+    verificationMessage.value = data.message || "이메일 인증이 완료되었습니다.";
+  } catch (error) {
+    form.emailVerificationToken = "";
+    emailVerified.value = false;
+    const message = error.response?.data?.message || "이메일 인증번호 확인에 실패했습니다.";
+    errorMessage.value = message;
+    window.alert(message);
+    await focusField("emailCode");
+  } finally {
+    verificationLoading.value = false;
+  }
+};
+
 // 가입 정보 저장이 끝나면 바로 가입 완료가 아니라 사진 심사 단계로 보낸다.
 const signup = async () => {
   loading.value = true;
@@ -345,7 +458,7 @@ const signup = async () => {
 
     const { data } = await api.post("/auth/signup", form);
     resetSignupApprovalNotice();
-    setToken(data.token);
+    setAuthTokens(data);
     router.push("/review-pending");
   } catch (error) {
     const message = error.response?.data?.message || "회원가입에 실패했습니다. 입력값을 다시 확인해주세요.";
@@ -437,6 +550,15 @@ label {
   gap: 14px;
 }
 
+.verification-box {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255, 247, 239, 0.78);
+  border: 1px solid #f0d8c4;
+}
+
 input,
 select,
 textarea {
@@ -484,12 +606,34 @@ textarea {
   box-shadow: 0 16px 28px rgba(205, 109, 45, 0.24);
 }
 
+.ghost-button {
+  width: 100%;
+  border: 1px solid rgba(205, 109, 45, 0.32);
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: #fffaf5;
+  color: #9a4e23;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ghost-button:disabled,
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
 .message {
   margin-top: 16px;
 }
 
 .error {
   color: #b72f2f;
+}
+
+.notice {
+  color: #276749;
 }
 
 .policy-box {

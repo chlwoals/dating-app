@@ -127,6 +127,7 @@ const errorMessage = ref("");
 const images = ref([]);
 const fileInputRef = ref(null);
 const reviewSubmitted = ref(false);
+const maxUploadFileSize = 10 * 1024 * 1024;
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:8082/api`;
 const assetBaseUrl = apiBaseUrl.replace(/\/api\/?$/, "");
 const reviewStatus = ref({
@@ -316,7 +317,19 @@ const saveImage = async () => {
 };
 
 const handleFileChange = (event) => {
-  form.file = event.target.files?.[0] || null;
+  const selectedFile = event.target.files?.[0] || null;
+  errorMessage.value = "";
+
+  if (selectedFile && selectedFile.size > maxUploadFileSize) {
+    form.file = null;
+    errorMessage.value = "사진 파일은 10MB 이하로 선택해 주세요.";
+    if (fileInputRef.value) {
+      fileInputRef.value.value = "";
+    }
+    return;
+  }
+
+  form.file = selectedFile;
 };
 
 const logout = () => {

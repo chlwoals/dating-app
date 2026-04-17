@@ -1,5 +1,5 @@
 import axios from "axios";
-import { clearToken, getToken } from "../utils/auth";
+import { clearToken, getToken, setAuthTokens } from "../utils/auth";
 
 function resolveApiBaseUrl() {
   const envBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -14,6 +14,12 @@ function resolveApiBaseUrl() {
 
 const api = axios.create({
   baseURL: resolveApiBaseUrl(),
+  withCredentials: true,
+});
+
+const refreshApi = axios.create({
+  baseURL: resolveApiBaseUrl(),
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
@@ -29,8 +35,28 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+  async (error) => {
+    const originalRequest = error.config;
+    const status = error.response?.status;
+    const canTryRefresh = status === 401
+      && originalRequest
+      && !originalRequest._retry
+      && !originalRequest.url?.startsWith("/auth/");
+
+    if (canTryRefresh) {
+      originalRequest._retry = true;
+      try {
+        const { data } = await refreshApi.post("/auth/refresh");
+        setAuthTokens(data);
+        originalRequest.headers.Authorization = `Bearer ${data.token}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        clearToken();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    if (status === 401 || status === 403) {
       clearToken();
     }
 

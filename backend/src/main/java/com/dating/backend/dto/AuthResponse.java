@@ -5,13 +5,17 @@ package com.dating.backend.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 @AllArgsConstructor
 public class AuthResponse {
 
-// ?醫뤾쿃
+    // access token
     private String token;
-// ?袁⑤굡 揶?
+    // refresh token
+    private String refreshToken;
+    // 사용자 정보
     private UserResponse user;
 }

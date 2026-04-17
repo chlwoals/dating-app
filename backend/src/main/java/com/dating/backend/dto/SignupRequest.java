@@ -33,6 +33,10 @@ public class SignupRequest {
     // 비밀번호
     private String password;
 
+    @NotBlank(message = "이메일 인증을 완료해 주세요.")
+    // 이메일 인증 완료 토큰
+    private String emailVerificationToken;
+
     @NotNull(message = "생년월일을 입력해 주세요.")
     // 생년월일
     private LocalDate birthDate;
