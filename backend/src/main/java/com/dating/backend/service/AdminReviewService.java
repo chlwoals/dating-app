@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -75,20 +76,24 @@ public class AdminReviewService {
             boolean dueSoonOnly,
             String query,
             String gender,
-            boolean profileCompleteOnly
+            boolean profileCompleteOnly,
+            String period
     ) {
         String normalizedStatus = (status == null || status.isBlank()) ? "PENDING_REVIEW" : status;
         String normalizedQuery = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
         String normalizedGender = gender == null || gender.isBlank() ? "ALL" : gender.toUpperCase(Locale.ROOT);
+        LocalDateTime periodStartAt = resolvePeriodStartAt(period);
         LocalDateTime dueSoonThreshold = LocalDateTime.now().plusDays(1);
 
         return userRepository.findByStatusOrderByCreatedAtAsc(normalizedStatus).stream()
                 .map(this::toCandidateResponseSafely)
                 .flatMap(Optional::stream)
+                .filter(candidate -> periodStartAt == null || (candidate.getCreatedAt() != null && !candidate.getCreatedAt().isBefore(periodStartAt)))
                 .filter(candidate -> !dueSoonOnly || (candidate.getReviewDeadlineAt() != null && !candidate.getReviewDeadlineAt().isAfter(dueSoonThreshold)))
                 .filter(candidate -> "ALL".equals(normalizedGender) || normalizedGender.equalsIgnoreCase(candidate.getGender()))
                 .filter(candidate -> !profileCompleteOnly || candidate.isProfileComplete())
                 .filter(candidate -> normalizedQuery.isBlank() || matchesQuery(candidate, normalizedQuery))
+                .sorted(Comparator.comparing(AdminReviewCandidateResponse::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
     }
 
@@ -244,6 +249,18 @@ public class AdminReviewService {
 
     private boolean contains(String value, String query) {
         return value != null && value.toLowerCase(Locale.ROOT).contains(query);
+    }
+
+    private LocalDateTime resolvePeriodStartAt(String period) {
+        String normalizedPeriod = period == null || period.isBlank()
+                ? "LATEST"
+                : period.trim().toUpperCase(Locale.ROOT);
+
+        return switch (normalizedPeriod) {
+            case "MONTH", "ONE_MONTH", "1_MONTH" -> LocalDateTime.now().minusMonths(1);
+            case "YEAR", "ONE_YEAR", "1_YEAR" -> LocalDateTime.now().minusYears(1);
+            default -> null;
+        };
     }
 
     private void recordHistory(Long userId, String actionType, String detail) {

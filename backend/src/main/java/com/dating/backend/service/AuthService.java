@@ -15,6 +15,7 @@ import com.dating.backend.dto.UserResponse;
 import com.dating.backend.entity.User;
 import com.dating.backend.entity.UserProfile;
 import com.dating.backend.entity.UserVerification;
+import com.dating.backend.exception.FocusableResponseStatusException;
 import com.dating.backend.repository.UserProfileRepository;
 import com.dating.backend.repository.UserRepository;
 import com.dating.backend.repository.UserVerificationRepository;
@@ -115,7 +116,7 @@ public class AuthService {
 
         if (user == null) {
             loginAttemptService.recordFailure(request.getEmail());
-            throw invalidLoginException();
+            throw signupRequiredException();
         }
 
         blockedIdentityService.validateLoginAllowed(user);
@@ -125,7 +126,7 @@ public class AuthService {
         }
 
         if ("DELETED".equals(user.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "탈퇴 처리된 계정입니다. 새로운 계정으로 가입해 주세요.");
+            throw new FocusableResponseStatusException(HttpStatus.FORBIDDEN, "탈퇴한 계정입니다. 다시 가입해 주세요.", "email");
         }
 
         if ("HIGH_RISK".equals(user.getFraudReviewStatus())) {
@@ -133,15 +134,16 @@ public class AuthService {
         }
 
         if (!hasLocalPassword(user)) {
-            throw new ResponseStatusException(
+            throw new FocusableResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "이메일 비밀번호로 가입한 계정이 아닙니다. 가입했던 방식으로 로그인해 주세요."
+                    "이 계정은 이메일 비밀번호 로그인 계정이 아닙니다. 가입했던 방식으로 로그인해 주세요.",
+                    "email"
             );
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             loginAttemptService.recordFailure(request.getEmail());
-            throw invalidLoginException();
+            throw invalidPasswordException();
         }
 
         loginAttemptService.recordSuccess(request.getEmail());
@@ -151,12 +153,17 @@ public class AuthService {
     @Transactional
     public PasswordResetRequestResponse requestPasswordReset(ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "가입된 이메일을 찾을 수 없습니다."));
+                .orElseThrow(() -> new FocusableResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "회원가입 이력이 없는 이메일입니다. 먼저 가입을 진행해 주세요.",
+                        "email"
+                ));
 
         if (!hasLocalPassword(user)) {
-            throw new ResponseStatusException(
+            throw new FocusableResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "소셜 가입 계정은 비밀번호 재설정을 지원하지 않습니다."
+                    "이 계정은 이메일 비밀번호 계정이 아니라 비밀번호 재설정을 진행할 수 없습니다.",
+                    "email"
             );
         }
 
@@ -251,10 +258,19 @@ public class AuthService {
         return user.getPassword() != null && !user.getPassword().isBlank();
     }
 
-    private ResponseStatusException invalidLoginException() {
-        return new ResponseStatusException(
+    private ResponseStatusException signupRequiredException() {
+        return new FocusableResponseStatusException(
                 HttpStatus.UNAUTHORIZED,
-                "이메일 또는 비밀번호가 올바르지 않습니다."
+                "회원가입이 필요합니다. 가입 후 로그인해 주세요.",
+                "email"
+        );
+    }
+
+    private ResponseStatusException invalidPasswordException() {
+        return new FocusableResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "비밀번호가 올바르지 않습니다. 다시 확인해 주세요.",
+                "password"
         );
     }
 

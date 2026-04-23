@@ -4,6 +4,7 @@
 package com.dating.backend.controller;
 
 import com.dating.backend.dto.ApiErrorResponse;
+import com.dating.backend.exception.FocusableResponseStatusException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -23,8 +24,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ApiErrorResponse> handleResponseStatusException(ResponseStatusException exception) {
         HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
+        String focusField = exception instanceof FocusableResponseStatusException focusableException
+                ? focusableException.getFocusField()
+                : inferFocusField(exception.getReason());
         return ResponseEntity.status(status)
-                .body(new ApiErrorResponse(status.name(), exception.getReason()));
+                .body(new ApiErrorResponse(status.name(), exception.getReason(), focusField));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -42,7 +46,12 @@ public class GlobalExceptionHandler {
                 })
                 .orElse("입력값을 다시 확인해 주세요.");
 
-        return ResponseEntity.badRequest().body(new ApiErrorResponse("VALIDATION_ERROR", message));
+        String focusField = exception.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(FieldError::getField)
+                .orElse(inferFocusField(message));
+
+        return ResponseEntity.badRequest().body(new ApiErrorResponse("VALIDATION_ERROR", message, focusField));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -52,13 +61,17 @@ public class GlobalExceptionHandler {
                 : exception.getMessage();
 
         String message = "중복되었거나 사용할 수 없는 값입니다. 입력값을 다시 확인해 주세요.";
+        String focusField = null;
         if (rawMessage != null) {
             if (rawMessage.contains("uk_users_email")) {
                 message = "이미 가입된 이메일입니다.";
+                focusField = "email";
             } else if (rawMessage.contains("uk_users_nickname")) {
                 message = "이미 사용 중인 닉네임입니다.";
+                focusField = "nickname";
             } else if (rawMessage.contains("uk_users_phone")) {
                 message = "이미 사용 중인 전화번호입니다.";
+                focusField = "phone";
             } else if (rawMessage.contains("uk_user_profile_images_main_user")) {
                 message = "대표 사진은 1장만 지정할 수 있습니다. 다시 시도해 주세요.";
             } else if (rawMessage.contains("uk_user_profile_images_user_order")) {
@@ -69,7 +82,7 @@ public class GlobalExceptionHandler {
         }
 
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ApiErrorResponse("DUPLICATE_VALUE", message));
+                .body(new ApiErrorResponse("DUPLICATE_VALUE", message, focusField));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -89,5 +102,27 @@ public class GlobalExceptionHandler {
         log.error("Unhandled server error", exception);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiErrorResponse("INTERNAL_SERVER_ERROR", "잠시 후 다시 시도해 주세요."));
+    }
+
+    private String inferFocusField(String message) {
+        if (message == null) {
+            return null;
+        }
+        if (message.contains("닉네임")) {
+            return "nickname";
+        }
+        if (message.contains("이메일")) {
+            return "email";
+        }
+        if (message.contains("비밀번호") || message.contains("로그인")) {
+            return "password";
+        }
+        if (message.contains("전화번호") || message.contains("휴대폰")) {
+            return "phone";
+        }
+        if (message.contains("인증")) {
+            return "code";
+        }
+        return null;
     }
 }

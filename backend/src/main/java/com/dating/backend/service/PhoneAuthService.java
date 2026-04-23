@@ -11,6 +11,7 @@ import com.dating.backend.dto.PhoneVerificationStartResponse;
 import com.dating.backend.dto.UserResponse;
 import com.dating.backend.entity.PhoneVerification;
 import com.dating.backend.entity.User;
+import com.dating.backend.exception.FocusableResponseStatusException;
 import com.dating.backend.repository.PhoneVerificationRepository;
 import com.dating.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -73,24 +74,28 @@ public class PhoneAuthService {
     public AuthResponse verifyAndLogin(PhoneVerificationConfirmRequest request) {
         String phone = normalizePhone(request.getPhone());
         PhoneVerification verification = phoneVerificationRepository.findTopByPhoneOrderByCreatedAtDesc(phone)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "인증 요청 기록을 찾을 수 없습니다."));
+                .orElseThrow(() -> new FocusableResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "인증번호를 먼저 요청해 주세요.",
+                        "phone"
+                ));
 
         if (Boolean.TRUE.equals(verification.getVerified())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 인증이 완료된 요청입니다.");
+            throw new FocusableResponseStatusException(HttpStatus.BAD_REQUEST, "이미 인증이 완료된 요청입니다. 새 인증번호를 요청해 주세요.", "phone");
         }
 
         if (verification.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "인증 시간이 만료되었습니다. 다시 요청해 주세요.");
+            throw new FocusableResponseStatusException(HttpStatus.BAD_REQUEST, "인증번호가 만료되었습니다. 새 인증번호를 요청해 주세요.", "phone");
         }
 
         if (verification.getAttemptCount() >= MAX_ATTEMPTS) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "인증 시도 횟수를 초과했습니다. 다시 요청해 주세요.");
+            throw new FocusableResponseStatusException(HttpStatus.BAD_REQUEST, "인증 시도 횟수를 초과했습니다. 새 인증번호를 요청해 주세요.", "phone");
         }
 
         verification.setAttemptCount(verification.getAttemptCount() + 1);
         if (!verification.getCode().equals(request.getCode())) {
             phoneVerificationRepository.save(verification);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "인증 코드가 올바르지 않습니다.");
+            throw new FocusableResponseStatusException(HttpStatus.BAD_REQUEST, "인증번호가 올바르지 않습니다. 다시 확인해 주세요.", "code");
         }
 
         verification.setVerified(true);

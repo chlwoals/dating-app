@@ -17,6 +17,8 @@ import com.dating.backend.dto.PhoneVerificationConfirmRequest;
 import com.dating.backend.dto.PhoneVerificationRequest;
 import com.dating.backend.dto.PhoneVerificationStartResponse;
 import com.dating.backend.dto.SignupRequest;
+import com.dating.backend.service.AbuseProtectionService;
+import com.dating.backend.service.AbuseRequestContext;
 import com.dating.backend.service.AuthService;
 import com.dating.backend.service.AuthVerificationService;
 import com.dating.backend.service.PhoneAuthService;
@@ -44,6 +46,7 @@ public class AuthController {
     private final PhoneAuthService phoneAuthService;
     private final AuthVerificationService authVerificationService;
     private final RefreshTokenService refreshTokenService;
+    private final AbuseProtectionService abuseProtectionService;
 
     @Value("${app.auth.refresh-cookie-secure:false}")
     private boolean refreshCookieSecure;
@@ -52,36 +55,84 @@ public class AuthController {
     private int refreshCookieMaxAgeSeconds;
 
     @PostMapping("/signup")
-    public AuthResponse signup(@Valid @RequestBody SignupRequest request, HttpServletResponse response) {
-        return withRefreshCookie(authService.signup(request), response);
+    public AuthResponse signup(
+            @Valid @RequestBody SignupRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse response
+    ) {
+        AbuseRequestContext context = buildAbuseContext(httpRequest);
+        abuseProtectionService.protectSignup(request.getEmail(), request.getWebsite(), request.getFormStartedAt(), context);
+        try {
+            return withRefreshCookie(authService.signup(request), response);
+        } catch (org.springframework.web.server.ResponseStatusException exception) {
+            abuseProtectionService.recordFailure("SIGNUP_FAILED", "EMAIL", request.getEmail(), context, exception.getReason());
+            throw exception;
+        }
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@Valid @RequestBody AuthRequest request, HttpServletResponse response) {
-        return withRefreshCookie(authService.login(request), response);
+    public AuthResponse login(
+            @Valid @RequestBody AuthRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse response
+    ) {
+        AbuseRequestContext context = buildAbuseContext(httpRequest);
+        abuseProtectionService.protectLogin(request.getEmail(), context);
+        try {
+            return withRefreshCookie(authService.login(request), response);
+        } catch (org.springframework.web.server.ResponseStatusException exception) {
+            abuseProtectionService.recordFailure("LOGIN_FAILED", "EMAIL", request.getEmail(), context, exception.getReason());
+            throw exception;
+        }
     }
 
     @PostMapping("/phone/request")
-    public PhoneVerificationStartResponse requestPhoneVerification(@Valid @RequestBody PhoneVerificationRequest request) {
+    public PhoneVerificationStartResponse requestPhoneVerification(
+            @Valid @RequestBody PhoneVerificationRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        abuseProtectionService.protectPhoneVerification(request.getPhone(), buildAbuseContext(httpRequest));
         return phoneAuthService.requestCode(request);
     }
 
     @PostMapping("/phone/verify")
     public AuthResponse verifyPhoneAndLogin(
             @Valid @RequestBody PhoneVerificationConfirmRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response
     ) {
-        return withRefreshCookie(phoneAuthService.verifyAndLogin(request), response);
+        AbuseRequestContext context = buildAbuseContext(httpRequest);
+        try {
+            return withRefreshCookie(phoneAuthService.verifyAndLogin(request), response);
+        } catch (org.springframework.web.server.ResponseStatusException exception) {
+            abuseProtectionService.recordFailure("PHONE_VERIFY_FAILED", "PHONE", request.getPhone(), context, exception.getReason());
+            throw exception;
+        }
     }
 
     @PostMapping("/verification/request")
-    public AuthVerificationStartResponse requestVerification(@Valid @RequestBody AuthVerificationRequest request) {
+    public AuthVerificationStartResponse requestVerification(
+            @Valid @RequestBody AuthVerificationRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        if ("EMAIL".equalsIgnoreCase(request.getTargetType())) {
+            abuseProtectionService.protectEmailVerification(request.getTargetValue(), buildAbuseContext(httpRequest));
+        }
         return authVerificationService.requestCode(request);
     }
 
     @PostMapping("/verification/confirm")
-    public AuthVerificationConfirmResponse confirmVerification(@Valid @RequestBody AuthVerificationConfirmRequest request) {
-        return authVerificationService.confirmCode(request);
+    public AuthVerificationConfirmResponse confirmVerification(
+            @Valid @RequestBody AuthVerificationConfirmRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        AbuseRequestContext context = buildAbuseContext(httpRequest);
+        try {
+            return authVerificationService.confirmCode(request);
+        } catch (org.springframework.web.server.ResponseStatusException exception) {
+            abuseProtectionService.recordFailure("VERIFICATION_CONFIRM_FAILED", request.getTargetType(), request.getTargetValue(), context, exception.getReason());
+            throw exception;
+        }
     }
 
     @PostMapping("/refresh")
@@ -91,7 +142,11 @@ public class AuthController {
     }
 
     @PostMapping("/password/reset/request")
-    public PasswordResetRequestResponse requestPasswordReset(@Valid @RequestBody ForgotPasswordRequest request) {
+    public PasswordResetRequestResponse requestPasswordReset(
+            @Valid @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        abuseProtectionService.protectPasswordReset(request.getEmail(), buildAbuseContext(httpRequest));
         return authService.requestPasswordReset(request);
     }
 
@@ -129,5 +184,14 @@ public class AuthController {
         }
 
         throw new org.springframework.web.server.ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인 유지 토큰이 없습니다.");
+    }
+
+    private AbuseRequestContext buildAbuseContext(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        String ipAddress = forwardedFor != null && !forwardedFor.isBlank()
+                ? forwardedFor.split(",")[0].trim()
+                : request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+        return new AbuseRequestContext(ipAddress, userAgent);
     }
 }

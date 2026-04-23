@@ -1,22 +1,16 @@
-export const TOKEN_KEY = "token";
-export const SIGNUP_APPROVAL_NOTICE_KEY = "signupApprovalNoticeShown";
+import { SIGNUP_APPROVAL_NOTICE_KEY, TOKEN_KEY, browserTokenStorage } from "../auth-client/browserTokenStorage";
 
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
+export { SIGNUP_APPROVAL_NOTICE_KEY, TOKEN_KEY };
+
+export const getToken = () => browserTokenStorage.getAccessToken();
 
 export const setToken = (token) => {
   localStorage.setItem(TOKEN_KEY, token);
 };
 
-export const setAuthTokens = ({ token }) => {
-  if (token) {
-    localStorage.setItem(TOKEN_KEY, token);
-  }
-};
+export const setAuthTokens = (tokens) => browserTokenStorage.setAuthTokens(tokens);
 
-export const clearToken = () => {
-  localStorage.removeItem(TOKEN_KEY);
-  sessionStorage.removeItem(SIGNUP_APPROVAL_NOTICE_KEY);
-};
+export const clearToken = () => browserTokenStorage.clear();
 
 export const hasToken = () => Boolean(getToken());
 

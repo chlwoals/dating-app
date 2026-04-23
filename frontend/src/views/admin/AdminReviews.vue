@@ -75,6 +75,18 @@
                 <option value="FEMALE">여성</option>
               </select>
             </label>
+            <div class="template-row">
+              <button
+                v-for="item in periodOptions"
+                :key="item.value"
+                class="ghost-button compact"
+                :class="{ active: periodFilter === item.value }"
+                type="button"
+                @click="selectPeriod(item.value)"
+              >
+                {{ item.label }}
+              </button>
+            </div>
             <label class="field search-wide">
               <span>검색</span>
               <input v-model.trim="searchKeyword" type="text" placeholder="이메일, 닉네임, 지역, 직업, 소개" />
@@ -366,6 +378,7 @@ const sectionIds = {
 const adminKey = ref(localStorage.getItem("adminReviewKey") || "");
 const statusFilter = ref("PENDING_REVIEW");
 const genderFilter = ref("ALL");
+const periodFilter = ref("LATEST");
 const searchKeyword = ref("");
 const dueSoonOnly = ref(false);
 const profileCompleteOnly = ref(false);
@@ -394,6 +407,11 @@ const message = ref("");
 const errorMessage = ref("");
 const activeSection = ref("review");
 const collapsed = ref({ review: false, risk: false, report: false });
+const periodOptions = [
+  { value: "LATEST", label: "최신순" },
+  { value: "MONTH", label: "1개월" },
+  { value: "YEAR", label: "1년" },
+];
 
 function loadRejectTemplates() {
   try {
@@ -406,6 +424,11 @@ function loadRejectTemplates() {
 
 const getHeaders = () => ({ "X-Admin-Key": adminKey.value });
 const persistAdminKey = () => localStorage.setItem("adminReviewKey", adminKey.value);
+
+const selectPeriod = async (period) => {
+  periodFilter.value = period;
+  await loadDashboard();
+};
 
 const reviewPendingCount = computed(() => reviewSummary.value?.pendingReviewCount ?? 0);
 const reviewRejectedCount = computed(() => reviewSummary.value?.rejectedCount ?? 0);
@@ -441,6 +464,7 @@ const loadDashboard = async () => {
           q: searchKeyword.value,
           gender: genderFilter.value,
           profileCompleteOnly: profileCompleteOnly.value,
+          period: periodFilter.value,
         },
       }),
       api.get(`/admin/safety/summary`, { headers: getHeaders() }),

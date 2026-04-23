@@ -55,7 +55,7 @@
 <script setup>
 import { reactive, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
-import api from "../../api/api";
+import { authClient } from "../../auth-client";
 
 const router = useRouter();
 const requestLoading = ref(false);
@@ -82,7 +82,7 @@ const requestReset = async () => {
   issuedToken.value = "";
 
   try {
-    const { data } = await api.post("/auth/password/reset/request", requestForm);
+    const data = await authClient.requestPasswordReset(requestForm.email);
     requestMessage.value = data.message;
     issuedToken.value = data.resetToken || "";
     confirmForm.token = data.resetToken || "";
@@ -99,7 +99,7 @@ const confirmReset = async () => {
   confirmError.value = "";
 
   try {
-    const { data } = await api.post("/auth/password/reset/confirm", confirmForm);
+    const data = await authClient.confirmPasswordReset(confirmForm.token, confirmForm.newPassword);
     confirmMessage.value = data.message;
     setTimeout(() => router.push("/"), 800);
   } catch (error) {

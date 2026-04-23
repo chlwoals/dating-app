@@ -170,6 +170,11 @@
           <span>만 19세 이상이며 서비스 이용약관과 개인정보 처리에 동의합니다.</span>
         </label>
 
+        <label class="honeypot-field" aria-hidden="true">
+          <span>웹사이트</span>
+          <input v-model="form.website" type="text" tabindex="-1" autocomplete="off" />
+        </label>
+
         <button class="primary-button" :disabled="loading">
           {{ loading ? "다음 단계 준비 중..." : "다음: 사진 업로드" }}
         </button>
@@ -196,7 +201,7 @@
 <script setup>
 import { computed, nextTick, reactive, ref, watch } from "vue";
 import { RouterLink, useRouter } from "vue-router";
-import api from "../../api/api";
+import { authClient } from "../../auth-client";
 import { resetSignupApprovalNotice, setAuthTokens } from "../../utils/auth";
 
 const mbtiOptions = [
@@ -262,6 +267,8 @@ const form = reactive({
   drinkingStatus: "NONE",
   religion: "NONE",
   agreedToTerms: false,
+  website: "",
+  formStartedAt: Date.now(),
 });
 
 const regionCities = Object.keys(regionOptions);
@@ -391,11 +398,7 @@ const requestEmailVerification = async () => {
       return;
     }
 
-    const { data } = await api.post("/auth/verification/request", {
-      targetType: "EMAIL",
-      targetValue: form.email,
-      purpose: "SIGNUP",
-    });
+    const data = await authClient.requestEmailCode(form.email, "SIGNUP");
 
     verificationMessage.value = data.devCode
       ? `개발용 이메일 인증번호: ${data.devCode}`
@@ -421,12 +424,7 @@ const confirmEmailVerification = async () => {
       return;
     }
 
-    const { data } = await api.post("/auth/verification/confirm", {
-      targetType: "EMAIL",
-      targetValue: form.email,
-      purpose: "SIGNUP",
-      code: emailVerificationCode.value,
-    });
+    const data = await authClient.confirmEmailCode(form.email, emailVerificationCode.value, "SIGNUP");
 
     form.emailVerificationToken = data.verificationToken;
     emailVerified.value = true;
@@ -456,7 +454,7 @@ const signup = async () => {
       return;
     }
 
-    const { data } = await api.post("/auth/signup", form);
+    const data = await authClient.signup(form);
     resetSignupApprovalNotice();
     setAuthTokens(data);
     router.push("/review-pending");
@@ -542,6 +540,10 @@ label {
   gap: 8px;
   color: #4d382d;
   font-weight: 600;
+}
+
+.honeypot-field {
+  display: none;
 }
 
 .region-grid {

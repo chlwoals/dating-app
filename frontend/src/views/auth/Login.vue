@@ -85,6 +85,7 @@
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import api from "../../api/api";
+import { authClient } from "../../auth-client";
 import { clearToken, setAuthTokens } from "../../utils/auth";
 
 const router = useRouter();
@@ -232,9 +233,68 @@ function resolveLoginErrorMessage(error) {
   const serverMessage = error.response?.data?.message;
 
   if (serverMessage) return serverMessage;
-  if (status === 401) return "이메일 또는 비밀번호를 다시 확인해 주세요.";
+  if (status === 400 || status === 401) return "이메일 또는 비밀번호를 다시 확인해 주세요.";
   if (status === 403) return "현재 로그인할 수 없는 계정 상태입니다. 운영 정책 또는 심사 상태를 확인해 주세요.";
   return "로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+}
+
+function resolveLoginFocusField(error, message) {
+  const serverFocusField = error.response?.data?.focusField;
+
+  if (serverFocusField === "email") return "email";
+  if (serverFocusField === "password") return "password";
+  if (serverFocusField === "phone") return "email";
+
+  if (message.includes("이메일") && !message.includes("비밀번호")) {
+    return "email";
+  }
+
+  return "password";
+}
+
+async function focusLoginField(field) {
+  await nextTick();
+
+  if (field === "email") {
+    emailInput.value?.focus();
+    emailInput.value?.select?.();
+    return;
+  }
+
+  passwordInput.value?.focus();
+  passwordInput.value?.select?.();
+}
+
+function getLoginValidationError() {
+  if (!form.email.trim()) {
+    return {
+      field: "email",
+      message: "이메일을 입력해 주세요.",
+    };
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    return {
+      field: "email",
+      message: "올바른 이메일 형식으로 입력해 주세요.",
+    };
+  }
+
+  if (!form.password) {
+    return {
+      field: "password",
+      message: "비밀번호를 입력해 주세요.",
+    };
+  }
+
+  if (form.password.length < 8) {
+    return {
+      field: "password",
+      message: "비밀번호는 8자 이상 입력해 주세요.",
+    };
+  }
+
+  return null;
 }
 
 function normalizePhoneInput() {
@@ -248,7 +308,15 @@ const login = async () => {
   noticeMessage.value = "";
 
   try {
-    const { data } = await api.post("/auth/login", form);
+    const validationError = getLoginValidationError();
+    if (validationError) {
+      errorMessage.value = validationError.message;
+      window.alert(validationError.message);
+      await focusLoginField(validationError.field);
+      return;
+    }
+
+    const data = await authClient.login(form);
     moveAfterLogin(data);
   } catch (error) {
     clearToken();
@@ -256,14 +324,7 @@ const login = async () => {
     errorMessage.value = message;
     window.alert(message);
 
-    await nextTick();
-    if (!form.email) {
-      emailInput.value?.focus();
-      return;
-    }
-
-    passwordInput.value?.focus();
-    passwordInput.value?.select?.();
+    await focusLoginField(resolveLoginFocusField(error, message));
   } finally {
     loading.value = false;
   }
@@ -284,7 +345,7 @@ async function requestPhoneCode() {
   phoneLoading.value = true;
 
   try {
-    const { data } = await api.post("/auth/phone/request", { phone: phoneForm.phone });
+    const data = await authClient.requestPhoneCode(phoneForm.phone);
     phoneForm.code = "";
     noticeMessage.value = data.devCode
       ? `개발용 인증번호: ${data.devCode}`
@@ -321,10 +382,7 @@ async function verifyPhoneAndLogin() {
   loading.value = true;
 
   try {
-    const { data } = await api.post("/auth/phone/verify", {
-      phone: phoneForm.phone,
-      code: phoneForm.code,
-    });
+    const data = await authClient.verifyPhoneAndLogin(phoneForm.phone, phoneForm.code);
     await moveAfterPhoneLogin(data);
   } catch (error) {
     clearToken();

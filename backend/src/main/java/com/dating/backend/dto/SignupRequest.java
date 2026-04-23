@@ -87,4 +87,10 @@ public class SignupRequest {
     @AssertTrue(message = "약관에 동의해 주세요.")
     // 약관 동의 여부
     private boolean agreedToTerms;
+
+    // 사람이 보지 못하는 봇 방지용 숨김 필드
+    private String website;
+
+    // 회원가입 화면 진입 시각
+    private Long formStartedAt;
 }
