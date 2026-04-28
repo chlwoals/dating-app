@@ -9,6 +9,7 @@ import SocialLogin from "../views/auth/SocialLogin.vue";
 import Chats from "../views/user/Chats.vue";
 import Home from "../views/user/Home.vue";
 import Profile from "../views/user/Profile.vue";
+import ProfileEdit from "../views/user/ProfileEdit.vue";
 import ReviewPending from "../views/user/ReviewPending.vue";
 import SignupComplete from "../views/user/SignupComplete.vue";
 import Today from "../views/user/Today.vue";
@@ -33,6 +34,7 @@ const routes = [
       { path: "/today", component: Today },
       { path: "/chats", component: Chats },
       { path: "/profile", component: Profile },
+      { path: "/profile/edit", component: ProfileEdit },
     ],
   },
 ];

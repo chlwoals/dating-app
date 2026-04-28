@@ -2,9 +2,9 @@
   <section class="simple-page">
     <div class="simple-card">
       <p class="eyebrow">Home</p>
-      <h1>홈</h1>
+      <h1>메인 홈</h1>
       <p class="description">
-        메인 홈 화면은 비워두었습니다. 아래 탭에서 오늘의 인연, 채팅, 프로필로 바로 이동할 수 있어요.
+        메인 홈 화면입니다. 아래 탭에서 오늘의 인연, 채팅, 프로필로 바로 이동할 수 있어요.
       </p>
     </div>
   </section>
