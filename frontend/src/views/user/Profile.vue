@@ -1,14 +1,19 @@
 <template>
   <section class="profile-page">
-    <div class="profile-shell" v-if="profile">
+    <div v-if="profile" class="profile-shell">
       <header class="page-card">
         <div class="section-head">
           <div>
             <p class="eyebrow">Profile</p>
             <h1>내 프로필</h1>
-            <p class="description">프로필 정보와 심사 진행 상태를 확인하고 필요한 화면으로 바로 이동할 수 있습니다.</p>
+            <p class="description">
+              프로필 정보와 심사 진행 상태를 확인하고 필요한 화면으로 바로 이동할 수 있습니다.
+            </p>
           </div>
           <div class="header-actions">
+            <button class="ghost-button" type="button" @click="goToEditProfile">프로필 수정</button>
+            <button class="ghost-button" type="button" @click="goToSupport">고객센터</button>
+            <button class="ghost-button" type="button" @click="goToPhoneVerify">{{ phoneActionLabel }}</button>
             <button class="ghost-button" type="button" @click="goToReview">사진 심사</button>
             <button class="logout-button" type="button" @click="logout">로그아웃</button>
           </div>
@@ -23,15 +28,30 @@
           </div>
           <div class="summary-actions">
             <span class="status-pill">{{ profile.status }}</span>
-            <button class="ghost-button" type="button" @click="goToEditProfile">프로필 수정</button>
           </div>
         </div>
 
         <dl class="summary-list">
-          <div><dt>이메일</dt><dd>{{ profile.email }}</dd></div>
-          <div><dt>닉네임</dt><dd>{{ profile.nickname }}</dd></div>
-          <div><dt>가입 방식</dt><dd>{{ providerLabel }}</dd></div>
-          <div><dt>등록 사진</dt><dd>{{ imageCount }}장</dd></div>
+          <div>
+            <dt>이메일</dt>
+            <dd>{{ profile.email }}</dd>
+          </div>
+          <div>
+            <dt>닉네임</dt>
+            <dd>{{ profile.nickname }}</dd>
+          </div>
+          <div>
+            <dt>전화번호</dt>
+            <dd>{{ profile.phone || "미인증" }}</dd>
+          </div>
+          <div>
+            <dt>가입 방식</dt>
+            <dd>{{ providerLabel }}</dd>
+          </div>
+          <div>
+            <dt>등록 사진</dt>
+            <dd>{{ imageCount }}장</dd>
+          </div>
         </dl>
       </section>
 
@@ -44,14 +64,38 @@
         </div>
 
         <dl class="summary-list preview-list">
-          <div><dt>생년월일</dt><dd>{{ profile.birthDate || "-" }}</dd></div>
-          <div><dt>성별</dt><dd>{{ genderLabel }}</dd></div>
-          <div><dt>거주 지역</dt><dd>{{ profile.region || "-" }}</dd></div>
-          <div><dt>직업</dt><dd>{{ profile.job || "-" }}</dd></div>
-          <div><dt>MBTI</dt><dd>{{ profile.mbti || "-" }}</dd></div>
-          <div><dt>흡연 여부</dt><dd>{{ smokingStatusLabel }}</dd></div>
-          <div><dt>음주 여부</dt><dd>{{ drinkingStatusLabel }}</dd></div>
-          <div><dt>종교</dt><dd>{{ religionLabel }}</dd></div>
+          <div>
+            <dt>생년월일</dt>
+            <dd>{{ profile.birthDate || "-" }}</dd>
+          </div>
+          <div>
+            <dt>성별</dt>
+            <dd>{{ genderLabel }}</dd>
+          </div>
+          <div>
+            <dt>거주 지역</dt>
+            <dd>{{ profile.region || "-" }}</dd>
+          </div>
+          <div>
+            <dt>직업</dt>
+            <dd>{{ profile.job || "-" }}</dd>
+          </div>
+          <div>
+            <dt>MBTI</dt>
+            <dd>{{ profile.mbti || "-" }}</dd>
+          </div>
+          <div>
+            <dt>흡연 여부</dt>
+            <dd>{{ smokingStatusLabel }}</dd>
+          </div>
+          <div>
+            <dt>음주 여부</dt>
+            <dd>{{ drinkingStatusLabel }}</dd>
+          </div>
+          <div>
+            <dt>종교</dt>
+            <dd>{{ religionLabel }}</dd>
+          </div>
         </dl>
 
         <div class="text-blocks">
@@ -79,31 +123,42 @@ const providerLabel = computed(() => {
   return "자체 이메일";
 });
 
+const phoneActionLabel = computed(() => (profile.value?.phone ? "전화번호 변경" : "전화번호 인증"));
+
 const genderLabel = computed(() => {
   if (profile.value?.gender === "MALE") return "남성";
   if (profile.value?.gender === "FEMALE") return "여성";
   return "-";
 });
 
-const smokingStatusLabel = computed(() => ({
-  NON_SMOKER: "비흡연",
-  OCCASIONAL: "가끔 흡연",
-  SMOKER: "흡연",
-}[profile.value?.smokingStatus] || "-"));
+const smokingStatusLabel = computed(
+  () =>
+    ({
+      NON_SMOKER: "비흡연",
+      OCCASIONAL: "가끔 흡연",
+      SMOKER: "흡연",
+    })[profile.value?.smokingStatus] || "-",
+);
 
-const drinkingStatusLabel = computed(() => ({
-  NONE: "안 함",
-  SOMETIMES: "가끔",
-  OFTEN: "자주",
-}[profile.value?.drinkingStatus] || "-"));
+const drinkingStatusLabel = computed(
+  () =>
+    ({
+      NONE: "안 함",
+      SOMETIMES: "가끔",
+      OFTEN: "자주",
+    })[profile.value?.drinkingStatus] || "-",
+);
 
-const religionLabel = computed(() => ({
-  NONE: "없음",
-  CHRISTIAN: "기독교",
-  CATHOLIC: "천주교",
-  BUDDHIST: "불교",
-  OTHER: "기타",
-}[profile.value?.religion] || "-"));
+const religionLabel = computed(
+  () =>
+    ({
+      NONE: "없음",
+      CHRISTIAN: "기독교",
+      CATHOLIC: "천주교",
+      BUDDHIST: "불교",
+      OTHER: "기타",
+    })[profile.value?.religion] || "-",
+);
 
 async function fetchProfileWithFallback() {
   try {
@@ -117,6 +172,7 @@ async function fetchProfileWithFallback() {
     const { data } = await api.get("/user/me");
     return {
       ...data,
+      phone: "",
       birthDate: "",
       gender: "MALE",
       region: "",
@@ -151,6 +207,14 @@ function goToEditProfile() {
   router.push("/profile/edit");
 }
 
+function goToSupport() {
+  router.push("/support");
+}
+
+function goToPhoneVerify() {
+  router.push("/profile/phone");
+}
+
 function goToReview() {
   router.push("/review-pending");
 }
@@ -177,18 +241,18 @@ onMounted(loadProfile);
 h1, h2 { margin: 0; color: #31211d; }
 .description { margin: 12px 0 0; color: #6f564d; line-height: 1.7; }
 .section-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 16px; }
-.header-actions { display: flex; align-items: center; gap: 10px; }
+.header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .summary-actions { display: flex; align-items: center; gap: 10px; }
 .status-pill { padding: 8px 12px; border-radius: 999px; background: #fff1e8; color: #9d5a43; font-size: 12px; font-weight: 800; }
 .summary-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
 .summary-list div { padding: 14px; border-radius: 18px; background: rgba(255, 247, 242, 0.9); }
 .summary-list dt { color: #8b675b; font-size: 13px; }
-.summary-list dd { margin: 8px 0 0; color: #2f211d; font-weight: 700; }
+.summary-list dd { margin: 8px 0 0; color: #2f211d; font-weight: 700; word-break: break-all; }
 .preview-list { margin-bottom: 16px; }
 .text-blocks { display: grid; gap: 12px; color: #5d4640; line-height: 1.7; }
 .text-blocks p { margin: 0; padding: 16px; border-radius: 18px; background: rgba(255, 247, 242, 0.9); }
 .ghost-button, .logout-button { border-radius: 999px; padding: 12px 18px; font-size: 14px; font-weight: 700; cursor: pointer; }
-.ghost-button { border: 1px solid rgba(207, 150, 128, 0.36); background: rgba(255,248,243,0.82); color: #6a4137; }
+.ghost-button { border: 1px solid rgba(207, 150, 128, 0.36); background: rgba(255, 248, 243, 0.82); color: #6a4137; }
 .logout-button { border: none; background: #f3dfd7; color: #7a473c; }
 @media (max-width: 760px) {
   .summary-list { grid-template-columns: 1fr; }

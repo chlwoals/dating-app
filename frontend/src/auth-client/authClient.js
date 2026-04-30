@@ -59,6 +59,14 @@ export function createAuthClient({
       return post("/auth/phone/verify", { phone, code }).then(persistAuthResponse);
     },
 
+    requestProfilePhoneCode(phone) {
+      return post("/profile/phone/request", { phone });
+    },
+
+    verifyProfilePhone(phone, code) {
+      return post("/profile/phone/verify", { phone, code });
+    },
+
     requestPasswordReset(email) {
       return post("/auth/password/reset/request", { email });
     },

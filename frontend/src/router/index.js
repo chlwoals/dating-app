@@ -10,8 +10,10 @@ import Chats from "../views/user/Chats.vue";
 import Home from "../views/user/Home.vue";
 import Profile from "../views/user/Profile.vue";
 import ProfileEdit from "../views/user/ProfileEdit.vue";
+import ProfilePhoneVerify from "../views/user/ProfilePhoneVerify.vue";
 import ReviewPending from "../views/user/ReviewPending.vue";
 import SignupComplete from "../views/user/SignupComplete.vue";
+import SupportCenter from "../views/user/SupportCenter.vue";
 import Today from "../views/user/Today.vue";
 import UserLayout from "../views/user/UserLayout.vue";
 
@@ -35,6 +37,8 @@ const routes = [
       { path: "/chats", component: Chats },
       { path: "/profile", component: Profile },
       { path: "/profile/edit", component: ProfileEdit },
+      { path: "/profile/phone", component: ProfilePhoneVerify },
+      { path: "/support", component: SupportCenter },
     ],
   },
 ];

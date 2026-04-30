@@ -1,5 +1,5 @@
 /**
- * MyProfileResponse 요청/응답 DTO
+ * 내 프로필 조회 응답 DTO입니다.
  */
 package com.dating.backend.dto;
 
@@ -16,17 +16,19 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MyProfileResponse {
 
-    // 유저 ID
+    // 사용자 ID
     private Long userId;
     // 이메일
     private String email;
+    // 전화번호
+    private String phone;
     // 닉네임
     private String nickname;
     // 계정 상태
     private String status;
     // 가입 경로
     private String provider;
-    // 심사 코멘트
+    // 심사 안내 문구
     private String reviewComment;
     // 생년월일
     private LocalDate birthDate;
@@ -40,7 +42,7 @@ public class MyProfileResponse {
     private String region;
     // 직업
     private String job;
-// MBTI
+    // MBTI
     private String mbti;
     // 성격
     private String personality;
@@ -59,6 +61,7 @@ public class MyProfileResponse {
         return new MyProfileResponse(
                 user.getId(),
                 user.getEmail(),
+                user.getPhone(),
                 user.getNickname(),
                 user.getStatus(),
                 user.getProvider(),

@@ -98,6 +98,7 @@ public class ProfileService {
         return new MyProfileResponse(
                 user.getId(),
                 user.getEmail(),
+                user.getPhone(),
                 user.getNickname(),
                 user.getStatus(),
                 user.getProvider(),
