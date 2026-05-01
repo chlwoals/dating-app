@@ -304,6 +304,73 @@
           <p v-else class="empty-state">조건에 맞는 신고가 없습니다.</p>
         </div>
       </section>
+
+      <section :id="sectionIds.support" class="section-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Support Desk</p>
+            <h2>고객 문의</h2>
+            <p class="sub-copy">홈 챗봇과 고객센터에서 접수된 문의를 확인하고 답변 상태를 관리합니다.</p>
+          </div>
+          <div class="section-tools">
+            <span class="pill-count">현재 {{ inquiries.length }}건</span>
+            <button class="ghost-button compact" @click="toggleSection('support')">{{ collapsed.support ? "펼치기" : "접기" }}</button>
+          </div>
+        </div>
+
+        <div class="mini-summary-grid">
+          <article class="mini-summary warm"><span>접수 대기</span><strong>{{ openInquiryCount }}건</strong></article>
+          <article class="mini-summary amber"><span>확인 중</span><strong>{{ inProgressInquiryCount }}건</strong></article>
+          <article class="mini-summary mint"><span>답변 완료</span><strong>{{ resolvedInquiryCount }}건</strong></article>
+          <article class="mini-summary sand"><span>종료</span><strong>{{ closedInquiryCount }}건</strong></article>
+        </div>
+
+        <div v-show="!collapsed.support" class="section-body">
+          <div class="toolbar report-toolbar">
+            <label class="field">
+              <span>문의 상태</span>
+              <select v-model="inquiryStatus">
+                <option value="OPEN">접수 대기</option>
+                <option value="IN_PROGRESS">확인 중</option>
+                <option value="RESOLVED">답변 완료</option>
+                <option value="CLOSED">종료</option>
+                <option value="ALL">전체</option>
+              </select>
+            </label>
+            <label class="field search-wide">
+              <span>검색</span>
+              <input v-model.trim="inquirySearchKeyword" type="text" placeholder="이메일, 닉네임, 문의 내용, 답변" />
+            </label>
+          </div>
+
+          <div v-if="inquiries.length" class="report-list">
+            <article v-for="inquiry in inquiries" :key="inquiry.id" class="report-card">
+              <div class="report-head">
+                <strong>#{{ inquiry.id }} · {{ supportCategoryLabel(inquiry.category) }}</strong>
+                <span class="report-status">{{ supportStatusLabel(inquiry.status) }}</span>
+              </div>
+              <p class="report-meta">{{ inquiry.nickname }} · {{ inquiry.email }} · {{ formatDateTime(inquiry.createdAt) }}</p>
+              <p class="detail-copy">{{ inquiry.question }}</p>
+              <label class="field">
+                <span>처리 상태</span>
+                <select v-model="inquiryStatuses[inquiry.id]">
+                  <option value="OPEN">접수 대기</option>
+                  <option value="IN_PROGRESS">확인 중</option>
+                  <option value="RESOLVED">답변 완료</option>
+                  <option value="CLOSED">종료</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>운영자 답변</span>
+                <textarea v-model.trim="inquiryReplies[inquiry.id]" rows="3" placeholder="고객에게 전달할 답변을 입력해주세요."></textarea>
+              </label>
+              <button class="primary-button compact" @click="saveInquiry(inquiry.id)">문의 상태 저장</button>
+            </article>
+          </div>
+
+          <p v-else class="empty-state">조건에 맞는 고객 문의가 없습니다.</p>
+        </div>
+      </section>
     </div>
 
     <div v-if="selectedCandidate" class="modal-backdrop" @click.self="selectedCandidate = null">
@@ -373,6 +440,7 @@ const sectionIds = {
   review: "review-section",
   risk: "risk-section",
   report: "report-section",
+  support: "support-section",
 };
 
 const adminKey = ref(localStorage.getItem("adminReviewKey") || "");
@@ -385,11 +453,15 @@ const profileCompleteOnly = ref(false);
 const riskStatus = ref("WATCH");
 const riskSearchKeyword = ref("");
 const reportStatus = ref("OPEN");
+const inquiryStatus = ref("OPEN");
+const inquirySearchKeyword = ref("");
 const candidates = ref([]);
 const reviewSummary = ref(null);
 const safetySummary = ref(null);
+const supportSummary = ref(null);
 const riskUsers = ref([]);
 const reports = ref([]);
+const inquiries = ref([]);
 const rejectComments = ref({});
 const adminMemos = ref({});
 const histories = ref({});
@@ -400,13 +472,15 @@ const selectedCandidate = ref(null);
 const riskLogs = ref({});
 const resolveNotes = ref({});
 const reviewNotes = ref({});
+const inquiryReplies = ref({});
+const inquiryStatuses = ref({});
 const expandedUserId = ref(null);
 const loading = ref(false);
 const loaded = ref(false);
 const message = ref("");
 const errorMessage = ref("");
 const activeSection = ref("review");
-const collapsed = ref({ review: false, risk: false, report: false });
+const collapsed = ref({ review: false, risk: false, report: false, support: false });
 const periodOptions = [
   { value: "LATEST", label: "최신순" },
   { value: "MONTH", label: "1개월" },
@@ -438,12 +512,17 @@ const highRiskCount = computed(() => safetySummary.value?.highRiskUserCount ?? 0
 const watchCount = computed(() => safetySummary.value?.watchUserCount ?? 0);
 const openReportCount = computed(() => safetySummary.value?.openReportCount ?? 0);
 const resolvedReportCount = computed(() => safetySummary.value?.resolvedReportCount ?? 0);
+const openInquiryCount = computed(() => supportSummary.value?.openCount ?? 0);
+const inProgressInquiryCount = computed(() => supportSummary.value?.inProgressCount ?? 0);
+const resolvedInquiryCount = computed(() => supportSummary.value?.resolvedCount ?? 0);
+const closedInquiryCount = computed(() => supportSummary.value?.closedCount ?? 0);
 
 // Top category cards mirror the three main admin workflows on one page.
 const categoryCards = computed(() => [
   { key: "review", label: "가입 심사", count: `${reviewPendingCount.value}명`, description: "사진과 프로필 심사를 우선 처리합니다.", theme: "warm" },
   { key: "risk", label: "위험 계정", count: `${highRiskCount.value + watchCount.value}명`, description: "스캠 의심 계정을 재검토하고 제한 상태를 관리합니다.", theme: "amber" },
   { key: "report", label: "신고 처리", count: `${openReportCount.value}건`, description: "접수된 사용자 신고를 확인하고 처리 완료로 전환합니다.", theme: "mint" },
+  { key: "support", label: "고객 문의", count: `${openInquiryCount.value + inProgressInquiryCount.value}건`, description: "챗봇과 고객센터에서 접수된 문의에 답변을 남깁니다.", theme: "soft" },
 ]);
 
 // Load review, safety, and report data together so the admin page stays in sync.
@@ -454,7 +533,7 @@ const loadDashboard = async () => {
 
   try {
     persistAdminKey();
-    const [reviewSummaryRes, candidatesRes, safetySummaryRes, usersRes, reportsRes] = await Promise.all([
+    const [reviewSummaryRes, candidatesRes, safetySummaryRes, usersRes, reportsRes, supportSummaryRes, inquiriesRes] = await Promise.all([
       api.get(`/admin/reviews/summary`, { headers: getHeaders() }),
       api.get(`/admin/reviews`, {
         headers: getHeaders(),
@@ -470,17 +549,23 @@ const loadDashboard = async () => {
       api.get(`/admin/safety/summary`, { headers: getHeaders() }),
       api.get(`/admin/safety/users`, { headers: getHeaders(), params: { riskStatus: riskStatus.value, q: riskSearchKeyword.value } }),
       api.get(`/admin/safety/reports`, { headers: getHeaders(), params: { status: reportStatus.value } }),
+      api.get(`/admin/support/summary`, { headers: getHeaders() }),
+      api.get(`/admin/support/inquiries`, { headers: getHeaders(), params: { status: inquiryStatus.value, q: inquirySearchKeyword.value } }),
     ]);
 
     reviewSummary.value = reviewSummaryRes.data;
     candidates.value = candidatesRes.data;
     safetySummary.value = safetySummaryRes.data;
+    supportSummary.value = supportSummaryRes.data;
     riskUsers.value = usersRes.data;
     reports.value = reportsRes.data;
+    inquiries.value = inquiriesRes.data;
     rejectComments.value = Object.fromEntries(candidates.value.map((candidate) => [candidate.userId, candidate.reviewComment || ""]));
     adminMemos.value = Object.fromEntries(candidates.value.map((candidate) => [candidate.userId, candidate.adminMemo || ""]));
     resolveNotes.value = Object.fromEntries(reports.value.map((report) => [report.id, report.adminNote || ""]));
     reviewNotes.value = Object.fromEntries(riskUsers.value.map((user) => [user.userId, user.adminMemo || ""]));
+    inquiryReplies.value = Object.fromEntries(inquiries.value.map((inquiry) => [inquiry.id, inquiry.adminReply || ""]));
+    inquiryStatuses.value = Object.fromEntries(inquiries.value.map((inquiry) => [inquiry.id, inquiry.status || "OPEN"]));
     loaded.value = true;
   } catch (error) {
     errorMessage.value = error.response?.data?.message || "관리자 대시보드를 불러오지 못했습니다.";
@@ -622,6 +707,19 @@ const resolveReport = async (reportId) => {
   }
 };
 
+const saveInquiry = async (inquiryId) => {
+  const status = inquiryStatuses.value[inquiryId];
+  const adminReply = inquiryReplies.value[inquiryId];
+
+  try {
+    const { data } = await api.put(`/admin/support/inquiries/${inquiryId}`, { status, adminReply }, { headers: getHeaders() });
+    message.value = data.message;
+    await loadDashboard();
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || "고객 문의 저장에 실패했습니다.";
+  }
+};
+
 const deadlineRuleClass = (candidate) => {
   if (candidate.remainingDays === 0) return "danger";
   if (candidate.remainingDays === 1) return "warning";
@@ -635,6 +733,8 @@ const riskClass = (value) => {
 };
 
 const reasonLabel = (value) => ({ INVESTMENT: "투자·금전 유도", EXTERNAL_CONTACT: "외부 메신저 유도", IMPERSONATION: "사칭 의심", HARASSMENT: "부적절한 접근", OTHER: "기타" }[value] || value);
+const supportCategoryLabel = (value) => ({ GENERAL: "일반 문의", LOGIN: "로그인/회원가입", REVIEW: "사진 심사", PROFILE: "프로필 수정", SAFETY: "스캠/신고" }[value] || value);
+const supportStatusLabel = (value) => ({ OPEN: "접수 대기", IN_PROGRESS: "확인 중", RESOLVED: "답변 완료", CLOSED: "종료" }[value] || value);
 
 const toAbsoluteImageUrl = (path) => {
   if (!path) return "";
