@@ -103,6 +103,7 @@ public class DailyMatchService {
         if (owners.isEmpty()) throw error(HttpStatus.UNAUTHORIZED, "로그인 후 이용해 주세요.");
         var owner = owners.get(0);
         if (!"ACTIVE".equals(owner.getStatus())) throw error(HttpStatus.FORBIDDEN, "승인된 계정만 인연을 확인할 수 있어요.");
+        preferences.requireConfigured(owner.getId());
         return owner;
     }
 
@@ -112,6 +113,7 @@ public class DailyMatchService {
     }
 
     private DailyMatchCard accessible(User owner, LocalDate day, int slot, DailyMatchSchedule.Window window) {
+        preferences.requireConfigured(owner.getId());
         if(owner.isResting())throw error(HttpStatus.CONFLICT,"휴식 모드를 해제한 뒤 이용해 주세요.");
         if (!window.day().equals(day)) throw error(HttpStatus.CONFLICT, "새로운 인연으로 갱신됐어요. 다시 확인해 주세요.");
         if (slot < 0) throw error(HttpStatus.NOT_FOUND, "카드를 찾을 수 없어요.");
@@ -128,9 +130,9 @@ public class DailyMatchService {
         var marker=new MatchRound(); marker.setOwnerId(owner.getId()); marker.setStartsAt(start);
         marker.setPreferenceId(pref==null?null:pref.getId()); em.persist(marker);
         // Preserve existing opened cards during migration; discard only unrevealed future reservations.
-        if(first==0 && cards.stream().limit(3).anyMatch(c->c.getCandidateId()!=null)) return;
+        if(pref==null && first==0 && cards.stream().limit(3).anyMatch(c->c.getCandidateId()!=null)) return;
         var excluded=cards(owner.getId(),window.day().minusDays(1)).stream().map(DailyMatchCard::getCandidateId).filter(Objects::nonNull).collect(Collectors.toSet());
-        for(var c:cards) if(c.getSlot()<first || c.getRevealedAt()!=null) if(c.getCandidateId()!=null) excluded.add(c.getCandidateId());
+        for(var c:cards) if(c.getSlot()<first || c.getRevealedAt()!=null || c.getSlot()>=6) if(c.getCandidateId()!=null) excluded.add(c.getCandidateId());
         var mine=profile(owner.getId()); var verification=verification(owner.getId());
         List<Candidate> pool=new ArrayList<>();
         if(verification!=null && verification.getBirthDate()!=null && !verification.getBirthDate().isAfter(window.day().minusYears(18))) {

@@ -1,8 +1,9 @@
 <template>
   <section class="today-page daily-matches">
-    <header class="match-heading"><h1 class="match-eyebrow">TODAY'S CONNECTION</h1><RecommendationSettings /></header>
+    <header class="match-heading"><h1 class="match-eyebrow">TODAY'S CONNECTION</h1><RecommendationSettings v-if="configured" @saved="conditionsSaved" /></header>
 
-    <div v-if="!deck" class="match-notice" role="status">
+    <RecommendationSettings v-if="configured === false" initial @saved="conditionsSaved" />
+    <div v-else-if="!deck" class="match-notice" role="status">
       <span class="notice-heart" aria-hidden="true">♡</span>
       <h2>{{ loading ? '오늘의 인연을 준비하고 있어요' : '잠시 연결이 어려워요' }}</h2>
       <p>{{ loading ? '불러오는 중…' : errorMessage }}</p>
@@ -92,6 +93,8 @@ const direct = ref(),actions=ref();
 const extraModal=ref(),extraQuote=ref(),extraBusy=ref(false),extraError=ref('');let pendingExtra;
 async function openExtra(){if(extraBusy.value)return;extraBusy.value=true;extraError.value='';try{extraQuote.value=(await api.get('/matches/today/extra')).data;if(!pendingExtra||pendingExtra.cycleDay!==extraQuote.value.cycleDay)pendingExtra={cycleDay:extraQuote.value.cycleDay,expectedCost:extraQuote.value.cost,requestId:requestId()};extraModal.value.showModal();}catch(e){errorMessage.value=e.response?.data?.message||'가격을 불러오지 못했어요.';}finally{extraBusy.value=false;}}
 async function buyExtra(){if(extraBusy.value||!extraQuote.value)return;extraBusy.value=true;extraError.value='';try{const {data}=await api.post('/matches/today/extra',pendingExtra);pendingExtra=null;await loadDeck();extraModal.value.close();await nextTick();goTo(data.slot);}catch(e){extraError.value=e.response?.data?.message||'결과를 확인하지 못했어요. 다시 눌러도 중복 차감되지 않습니다.';}finally{extraBusy.value=false;}}
+const configured = ref(null);
+function conditionsSaved(data) { configured.value=data.configured; if(!deck.value)loadDeck(); }
 const deck = ref(null);
 const loading = ref(false);
 const errorMessage = ref('');
@@ -120,6 +123,12 @@ async function loadDeck() {
   loading.value = true;
   errorMessage.value = '';
   try {
+    if(configured.value !== true) {
+      const settings=await api.get('/social/preferences');
+      if(disposed)return;
+      configured.value=settings.data.configured;
+      if(configured.value!==true)return;
+    }
     const { data } = await api.get('/matches/today');
     if (disposed) return;
     const changed = deck.value?.cycleDay !== data.cycleDay;
@@ -134,6 +143,7 @@ async function loadDeck() {
       goTo(0, false);
     }
   } catch (error) {
+    if(error.response?.status===428){configured.value=false;deck.value=null;}
     errorMessage.value = error.response?.data?.message || '인연을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
   } finally {
     loading.value = false;

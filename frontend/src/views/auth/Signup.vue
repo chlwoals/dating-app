@@ -165,8 +165,22 @@
           <textarea v-model.trim="form.introduction" rows="4" placeholder="첫인상에 보일 자기소개를 적어주세요."></textarea>
         </label>
 
-        <div class="signup-consents"><h3>약관 동의</h3><label class="checkbox-row"><input ref="termsCheckbox" v-model="form.agreedToTerms" type="checkbox" required/><span>[필수] 서비스 이용약관</span><button type="button" @click="showTerms('terms')">보기</button></label><label class="checkbox-row"><input v-model="form.agreedToPrivacy" type="checkbox" required/><span>[필수] 개인정보 수집·이용</span><button type="button" @click="showTerms('privacy')">보기</button></label><label class="checkbox-row"><input v-model="form.adultConfirmed" type="checkbox" required/><span>[필수] 만 19세 이상입니다.</span></label><label class="checkbox-row"><input v-model="form.marketingConsent" type="checkbox"/><span>[선택] 이벤트·마케팅 안내 수신</span></label><p>검토용 약관 초안이 적용된 테스트 서비스입니다.</p></div>
-        <dialog ref="termsDialog" class="social-dialog"><header><h2>약관 안내</h2><button type="button" aria-label="닫기" @click="termsDialog.close()">×</button></header><TermsText :type="termsType"/></dialog>
+        <section class="signup-consents" aria-labelledby="consents-title">
+          <h3 id="consents-title">약관 및 개인정보 동의</h3>
+          <details class="consent-document" open>
+            <summary>서비스 이용약관 <span>전문 보기</span></summary>
+            <div class="consent-body" tabindex="0" role="region" aria-label="서비스 이용약관 본문"><TermsText type="terms"/></div>
+          </details>
+          <label class="consent-check"><input ref="termsCheckbox" v-model="form.agreedToTerms" type="checkbox" required/><span><b>[필수]</b> 서비스 이용약관에 동의합니다.</span></label>
+          <details class="consent-document" open>
+            <summary>개인정보 수집·이용 안내 <span>전문 보기</span></summary>
+            <div class="consent-body" tabindex="0" role="region" aria-label="개인정보 수집 이용 안내 본문"><TermsText type="privacy"/></div>
+          </details>
+          <label class="consent-check"><input v-model="form.agreedToPrivacy" type="checkbox" required/><span><b>[필수]</b> 개인정보 수집·이용에 동의합니다.</span></label>
+          <label class="consent-check"><input v-model="form.adultConfirmed" type="checkbox" required/><span><b>[필수]</b> 만 19세 이상입니다.</span></label>
+          <label class="consent-check"><input v-model="form.marketingConsent" type="checkbox"/><span>[선택] 이벤트·마케팅 안내 수신</span></label>
+          <p class="consent-note">선택 항목에 동의하지 않아도 가입할 수 있습니다.</p>
+        </section>
 
         <label class="honeypot-field" aria-hidden="true">
           <span>웹사이트</span>
@@ -247,7 +261,6 @@ const genderSelect = ref(null);
 const regionCitySelect = ref(null);
 const regionDistrictSelect = ref(null);
 const termsCheckbox = ref(null);
-const termsDialog=ref(),termsType=ref("terms");function showTerms(type){termsType.value=type;termsDialog.value.showModal();}
 const selectedRegionCity = ref("");
 const selectedRegionDistrict = ref("");
 
@@ -694,4 +707,18 @@ textarea {
 }
 </style>
 
-<style scoped>.signup-consents{padding:16px;border:1px solid #eddcd0;border-radius:16px}.signup-consents h3{font-size:15px}.signup-consents button{margin-left:auto;border:0;background:none;color:#9b6a53;text-decoration:underline;white-space:nowrap}.signup-consents p{font-size:11px;color:#9b8b80}.signup-consents .checkbox-row{font-size:12px;margin:14px 0}</style>
+<style scoped>
+.signup-consents { padding-top: 12px; border-top: 1px solid #eddcd0; }
+.signup-consents h3 { margin: 8px 0 18px; font-size: 17px; color: #3b281f; }
+.consent-document { border: 1px solid #eadbd1; border-radius: 14px; background: #fff; overflow: hidden; }
+.consent-document summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 52px; padding: 12px; color: #50382c; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+.consent-document summary::-webkit-details-marker { display: none; }
+.consent-document summary span { flex-shrink: 0; color: #98715d; font-size: 11px; }
+.consent-document summary::after { content: '+'; font-size: 18px; }
+.consent-document[open] summary::after { content: '−'; }
+.consent-body { max-height: 280px; overflow-y: auto; padding: 0 14px 14px; border-top: 1px solid #f0e6df; }
+.signup-consents .consent-check { display: flex; align-items: flex-start; gap: 10px; padding: 14px 0; margin: 0; min-height: 48px; font-size: 13px; font-weight: 500; line-height: 1.6; cursor: pointer; }
+.consent-check input { appearance: auto; flex: 0 0 20px; width: 20px; height: 20px; margin: 1px 0 0; padding: 0; border-radius: 4px; accent-color: #a95238; box-shadow: none; }
+.consent-check b { color: #a95238; font-weight: 600; }
+.consent-note { margin: 0; font-size: 12px; line-height: 1.6; color: #806c60; }
+</style>

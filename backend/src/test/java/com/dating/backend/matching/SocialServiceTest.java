@@ -18,7 +18,7 @@ class SocialServiceTest {
  @Autowired NotificationService notifications; @Autowired EntityManager em; @Autowired SocialService social; @Autowired DailyMatchService daily; @Autowired MatchPreferenceService preferences;
  @MockitoBean DailyMatchSchedule schedule;
  User a,b,c; LocalDate day=LocalDate.of(2026,10,21);
- @BeforeEach void setup(){time("2026-10-21T10:00:00");a=person("a","MALE");b=person("b","FEMALE");c=person("c","MALE");known(a,b);var w=new CreditWallet();w.setUserId(a.getId());w.setBalance(100);em.persist(w);}
+ @BeforeEach void setup(){time("2026-10-21T10:00:00");a=person("a","MALE");b=person("b","FEMALE");c=person("c","MALE");preferences.save(a.getEmail(),new MatchPreferenceService.Conditions(null,null,"ANY","ANY","ANY","ANY","ANY"));known(a,b);var w=new CreditWallet();w.setUserId(a.getId());w.setBalance(100);em.persist(w);}
  void time(String s){when(schedule.current()).thenReturn(DailyMatchSchedule.at(LocalDateTime.parse(s).atZone(ZoneId.of("Asia/Seoul")).toInstant()));}
  User person(String name,String gender){var u=User.builder().email(name+"@social.test").nickname(name).provider("LOCAL").status("ACTIVE").build();em.persist(u);em.persist(UserProfile.builder().userId(u.getId()).region("서울 강남구").mbti("ESFJ").build());em.persist(UserVerification.builder().userId(u.getId()).gender(gender).birthDate(LocalDate.of(1995,1,1)).build());em.persist(UserProfileImage.builder().userId(u.getId()).imageUrl("/uploads/test.jpg").imageOrder(0).isMain(true).build());return u;}
  void known(User x,User y){var card=new DailyMatchCard();card.setOwnerId(x.getId());card.setCycleDay(day);card.setSlot(0);card.setCandidateId(y.getId());card.setRevealedAt(Instant.now());em.persist(card);}

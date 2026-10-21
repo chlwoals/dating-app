@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 @Transactional
 class DailyMatchServiceTest {
     @Autowired DailyMatchService service;
+    @Autowired MatchPreferenceService preferences;
     @Autowired EntityManager em;
     @MockitoBean DailyMatchSchedule schedule;
     User owner;
@@ -26,6 +27,7 @@ class DailyMatchServiceTest {
     @BeforeEach void setup() {
         time("2026-10-21T08:00:00");
         owner = person("owner", "MALE", "ACTIVE");
+        preferences.save(owner.getEmail(),new MatchPreferenceService.Conditions(null,null,"ANY","ANY","ANY","ANY","ANY"));
     }
     void time(String local) {
         when(schedule.current()).thenReturn(DailyMatchSchedule.at(LocalDateTime.parse(local)
@@ -97,10 +99,52 @@ class DailyMatchServiceTest {
     }
     @Test void suspendedCandidateDisappearsAndOtherUsersCannotOpenOwnersDeck() {
         var other = person("other", "FEMALE", "ACTIVE");
+        preferences.save(other.getEmail(),new MatchPreferenceService.Conditions(null,null,"ANY","ANY","ANY","ANY","ANY"));
         service.today(owner.getEmail()); service.reveal(owner.getEmail(), day, 0);
         assertEquals(404, assertThrows(ResponseStatusException.class, () -> service.reveal(other.getEmail(), day, 0)).getStatusCode().value());
         other.setStatus("SUSPENDED");
         var card = service.today(owner.getEmail()).cards().get(0);
         assertEquals("UNAVAILABLE", card.state()); assertNull(card.profile());
+    }
+
+    void removeSetup() {
+        em.createQuery("delete from MatchPreference p where p.ownerId=:id").setParameter("id",owner.getId()).executeUpdate();
+    }
+    @Test void noRecommendationsOrPurchasesBeforeFirstSetup() {
+        removeSetup(); sixCandidates();
+        assertFalse(preferences.get(owner.getEmail()).configured());
+        assertEquals(428,assertThrows(ResponseStatusException.class,()->service.today(owner.getEmail())).getStatusCode().value());
+        assertEquals(428,assertThrows(ResponseStatusException.class,()->service.extraQuote(owner.getEmail())).getStatusCode().value());
+        assertEquals(428,assertThrows(ResponseStatusException.class,()->service.buyExtra(owner.getEmail(),new DailyMatchService.ExtraPurchase(day,10,UUID.randomUUID().toString()))).getStatusCode().value());
+        assertTrue(saved(day).isEmpty());
+        assertEquals(0L,em.createQuery("select count(r) from MatchRound r where r.ownerId=:id",Long.class).setParameter("id",owner.getId()).getSingleResult());
+    }
+    @Test void firstConditionsApplyImmediatelyAndFurtherChangesWait() {
+        removeSetup(); sixCandidates(); time("2026-10-21T21:00:00");
+        var conditions=new MatchPreferenceService.Conditions(null,null,"ANY","INTJ","ANY","ANY","ANY");
+        var first=preferences.save(owner.getEmail(),conditions);
+        assertTrue(first.configured());assertNull(first.pending());assertEquals("INTJ",first.active().mbti());
+        var deck=service.today(owner.getEmail());
+        assertTrue(deck.cards().stream().allMatch(c->c.state().equals("EMPTY")));
+        var changed=preferences.save(owner.getEmail(),new MatchPreferenceService.Conditions(null,null,"ANY","ANY","ANY","ANY","ANY"));
+        assertEquals("INTJ",changed.active().mbti());assertEquals("ANY",changed.pending().mbti());
+        assertEquals(deck,service.today(owner.getEmail()));
+        time("2026-10-22T08:00:00");
+        assertEquals("HIDDEN",service.today(owner.getEmail()).cards().get(0).state());
+    }
+    @Test void firstSetupPreservesOpenedLegacyCardsButRefiltersUnopenedOnes() {
+        sixCandidates();service.today(owner.getEmail());var opened=service.reveal(owner.getEmail(),day,0);
+        removeSetup();
+        preferences.save(owner.getEmail(),new MatchPreferenceService.Conditions(null,null,"ANY","INTJ","ANY","ANY","ANY"));
+        var deck=service.today(owner.getEmail());
+        assertEquals(opened,deck.cards().get(0));
+        assertEquals("EMPTY",deck.cards().get(1).state());assertEquals("EMPTY",deck.cards().get(2).state());
+    }
+    @Test void explicitAnyIsACompletedSetupIncludingBeforeEight() {
+        removeSetup();time("2026-10-22T07:00:00");sixCandidates();
+        var first=preferences.save(owner.getEmail(),new MatchPreferenceService.Conditions(null,null,"ANY","ANY","ANY","ANY","ANY"));
+        assertTrue(first.configured());assertNull(first.pending());
+        assertEquals(day,service.today(owner.getEmail()).cycleDay());
+        assertEquals("HIDDEN",service.today(owner.getEmail()).cards().get(0).state());
     }
 }

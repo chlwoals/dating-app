@@ -20,14 +20,22 @@ public class MatchPreferenceService {
             this(ageMin,ageMax,regionScope,mbti,smoking,drinking,religion,null,null,null);
         }
     }
-    public record Settings(Conditions active, Conditions pending, Instant effectiveAt, Instant nextRoundAt, String region, boolean radiusAvailable, int referenceYear) {}
+    public record Settings(Conditions active, Conditions pending, Instant effectiveAt, Instant nextRoundAt, String region, boolean radiusAvailable, int referenceYear, boolean configured) {}
     static final Set<String> MBTI = Set.of("ANY","INTJ","INTP","ENTJ","ENTP","INFJ","INFP","ENFJ","ENFP","ISTJ","ISFJ","ESTJ","ESFJ","ISTP","ISFP","ESTP","ESFP");
     @Transactional(readOnly=true) public Settings get(String email) { return settings(owner(email, false)); }
     @Transactional public Settings save(String email, Conditions c) {
         var owner=owner(email,true); validate(c);
         if(c.radiusKm()!=null && !regions.known(region(owner.getId())))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"프로필의 거주 지역을 먼저 선택해 주세요.");
-        var w=schedule.current(); var next=w.now().isBefore(w.evening())?w.evening():w.resetAt();
+        var w=schedule.current(); boolean first=!configured(owner.getId());
+        var next=first?w.morning():(w.now().isBefore(w.evening())?w.evening():w.resetAt());
+        if(first) {
+            // Re-evaluate only unopened free cards created before onboarding was introduced.
+            em.createQuery("delete from MatchRound r where r.ownerId=:id and r.startsAt>=:start and r.startsAt<:end")
+                .setParameter("id",owner.getId()).setParameter("start",w.morning()).setParameter("end",w.resetAt()).executeUpdate();
+            for(var card:em.createQuery("select c from DailyMatchCard c where c.ownerId=:id and c.cycleDay=:day and c.slot<6 and c.revealedAt is null",DailyMatchCard.class)
+                .setParameter("id",owner.getId()).setParameter("day",w.day()).getResultList()) card.setCandidateId(null);
+        }
         var pending=em.createQuery("select p from MatchPreference p where p.ownerId=:id and p.effectiveAt=:at",MatchPreference.class)
                 .setParameter("id",owner.getId()).setParameter("at",next).getResultStream().findFirst().orElseGet(MatchPreference::new);
         pending.setOwnerId(owner.getId()); pending.setEffectiveAt(next);
@@ -36,6 +44,13 @@ public class MatchPreferenceService {
         pending.setMbti(c.mbti()); pending.setSmoking(c.smoking()); pending.setDrinking(c.drinking()); pending.setReligion(c.religion());
         if(pending.getId()==null) em.persist(pending);
         return settings(owner);
+    }
+    public boolean configured(Long ownerId) {
+        return em.createQuery("select count(p) from MatchPreference p where p.ownerId=:id",Long.class)
+            .setParameter("id",ownerId).getSingleResult()>0;
+    }
+    public void requireConfigured(Long ownerId) {
+        if(!configured(ownerId)) throw new ResponseStatusException(HttpStatus.PRECONDITION_REQUIRED,"추천조건을 먼저 설정해 주세요.");
     }
     public MatchPreference active(Long ownerId, Instant roundStart) {
         return em.createQuery("select p from MatchPreference p where p.ownerId=:id and p.effectiveAt<=:at order by p.effectiveAt desc,p.id desc",MatchPreference.class)
@@ -62,7 +77,7 @@ public class MatchPreferenceService {
         var w=schedule.current(); var start=w.now().isBefore(w.evening())?w.morning():w.evening();
         var pending=em.createQuery("select p from MatchPreference p where p.ownerId=:id and p.effectiveAt>:now order by p.effectiveAt desc",MatchPreference.class)
                 .setParameter("id",owner.getId()).setParameter("now",w.now()).setMaxResults(1).getResultStream().findFirst().orElse(null);
-        return new Settings(dto(active(owner.getId(),start)),pending==null?null:dto(pending),pending==null?null:pending.getEffectiveAt(),w.now().isBefore(w.evening())?w.evening():w.resetAt(),region(owner.getId()),regions.known(region(owner.getId())),w.now().atZone(DailyMatchSchedule.ZONE).getYear());
+        return new Settings(dto(active(owner.getId(),start)),pending==null?null:dto(pending),pending==null?null:pending.getEffectiveAt(),w.now().isBefore(w.evening())?w.evening():w.resetAt(),region(owner.getId()),regions.known(region(owner.getId())),w.now().atZone(DailyMatchSchedule.ZONE).getYear(),configured(owner.getId()));
     }
     private Conditions dto(MatchPreference p) { return p==null?new Conditions(null,null,"ANY","ANY","ANY","ANY","ANY"):new Conditions(p.getAgeMin(),p.getAgeMax(),p.getRegionScope(),p.getMbti(),p.getSmoking(),p.getDrinking(),p.getReligion(),p.getBirthYearMin(),p.getBirthYearMax(),p.getRadiusKm()); }
     private String region(Long id) {
