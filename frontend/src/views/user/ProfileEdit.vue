@@ -12,6 +12,7 @@
         </div>
       </header>
 
+      <p class="review-hint">승인된 회원의 프로필·사진 변경은 재심사 후 공개됩니다. 승인 전에는 기존 내용이 보입니다.</p><PhotoEditor/>
       <section class="page-card">
         <form class="profile-form" @submit.prevent="saveProfile">
           <label>
@@ -120,6 +121,7 @@
 </template>
 
 <script setup>
+import PhotoEditor from "../../components/PhotoEditor.vue";
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import api from "../../api/api";

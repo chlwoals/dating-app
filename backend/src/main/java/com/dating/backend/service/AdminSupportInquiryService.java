@@ -23,6 +23,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class AdminSupportInquiryService {
 
+    private final com.dating.backend.matching.InboxService inbox;
     private final SupportInquiryRepository supportInquiryRepository;
 
     /**
@@ -64,10 +65,12 @@ public class AdminSupportInquiryService {
         SupportInquiry inquiry = supportInquiryRepository.findById(inquiryId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "문의 내역을 찾을 수 없습니다."));
 
+        if(!List.of("OPEN","IN_PROGRESS","RESOLVED","CLOSED").contains(request.getStatus().trim().toUpperCase(Locale.ROOT)))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"올바른 문의 상태를 선택해 주세요.");
         inquiry.setStatus(request.getStatus().trim().toUpperCase(Locale.ROOT));
         inquiry.setAdminReply(request.getAdminReply() == null || request.getAdminReply().isBlank() ? null : request.getAdminReply().trim());
         inquiry.setUpdatedAt(LocalDateTime.now());
         supportInquiryRepository.save(inquiry);
+        if(inquiry.getAdminReply()!=null&&inquiry.getUserId()!=null)inbox.add(inquiry.getUserId(),"SUPPORT:"+inquiry.getId()+":"+System.currentTimeMillis(),"고객센터 답변이 도착했어요","문의 내역에서 답변을 확인해 주세요.","/support");
 
         return new MessageResponse("문의 처리 상태를 저장했습니다.");
     }

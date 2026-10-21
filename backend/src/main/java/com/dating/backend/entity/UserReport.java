@@ -25,6 +25,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class UserReport {
+    private String resolutionAction;
+    private Integer suspensionDays;
+    private java.time.Instant resolvedAt;
+    @Column(length=1000) private String publicReason;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

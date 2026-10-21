@@ -46,10 +46,13 @@ public class AuthService {
     private final BlockedIdentityService blockedIdentityService;
     private final AuthVerificationService authVerificationService;
     private final LoginAttemptService loginAttemptService;
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager em;
     private final RefreshTokenService refreshTokenService;
+    private final com.dating.backend.matching.SanctionService sanctions;
 
     @Transactional
     public AuthResponse signup(SignupRequest request) {
+        if(!request.isAgreedToTerms()||!request.isAgreedToPrivacy()||!request.isAdultConfirmed()||!"2026-10-21-draft".equals(request.getTermsVersion()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"필수 약관과 최신 버전 동의를 확인해 주세요.");
         validateAdultSignup(request);
         authVerificationService.validateSignupEmailVerified(request.getEmail(), request.getEmailVerificationToken());
         blockedIdentityService.validateSignupAllowed(request.getEmail(), null);
@@ -67,6 +70,7 @@ public class AuthService {
         }
 
         if (existingUser != null) {
+            if("SUSPENDED".equals(existingUser.getStatus())||existingUser.getSanctionType()!=null)throw new ResponseStatusException(HttpStatus.FORBIDDEN,"정지된 계정은 다시 가입할 수 없습니다.");
             if (hasLocalPassword(existingUser)) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
@@ -87,7 +91,7 @@ public class AuthService {
             upsertProfile(linkedUser, request);
             upsertVerification(linkedUser, request);
             fraudDetectionService.evaluateUserProfile(linkedUser.getId());
-            return buildAuthResponse(linkedUser);
+            consent(linkedUser,request);return buildAuthResponse(linkedUser);
         }
 
         User user = User.builder()
@@ -104,9 +108,10 @@ public class AuthService {
         upsertProfile(savedUser, request);
         upsertVerification(savedUser, request);
         fraudDetectionService.evaluateUserProfile(savedUser.getId());
-        return buildAuthResponse(savedUser);
+        consent(savedUser,request);return buildAuthResponse(savedUser);
     }
 
+    private void consent(User u,SignupRequest r){var c=new com.dating.backend.matching.TermsConsent();c.setUserId(u.getId());c.setVersion(r.getTermsVersion());c.setTerms(r.isAgreedToTerms());c.setPrivacy(r.isAgreedToPrivacy());c.setAdult(r.isAdultConfirmed());c.setMarketing(r.isMarketingConsent());em.persist(c);}
     @Transactional
     public AuthResponse login(AuthRequest request) {
         loginAttemptService.validateNotLocked(request.getEmail());
@@ -119,10 +124,11 @@ public class AuthService {
             throw signupRequiredException();
         }
 
+        sanctions.expire(user.getId());
         blockedIdentityService.validateLoginAllowed(user);
 
         if ("SUSPENDED".equals(user.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "정지된 계정입니다. 고객센터에 문의해 주세요.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "PERMANENT".equals(user.getSanctionType())?"영구 정지된 계정입니다. 고객센터에 문의해 주세요.":user.getSuspendedUntil()!=null?"기간 정지 중입니다. 종료: "+user.getSuspendedUntil().atZone(java.time.ZoneId.of("Asia/Seoul")):"정지된 계정입니다. 고객센터에 문의해 주세요.");
         }
 
         if ("DELETED".equals(user.getStatus())) {

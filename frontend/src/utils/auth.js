@@ -10,7 +10,7 @@ export const setToken = (token) => {
 
 export const setAuthTokens = (tokens) => browserTokenStorage.setAuthTokens(tokens);
 
-export const clearToken = () => browserTokenStorage.clear();
+export const clearToken = () => { const token=getToken(); if(token)import('../components/push').then(m=>m.detachPush(token));browserTokenStorage.clear(); };
 
 export const hasToken = () => Boolean(getToken());
 

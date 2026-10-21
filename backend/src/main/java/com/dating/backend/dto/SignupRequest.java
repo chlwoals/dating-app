@@ -87,6 +87,10 @@ public class SignupRequest {
     @AssertTrue(message = "약관에 동의해 주세요.")
     // 약관 동의 여부
     private boolean agreedToTerms;
+    @AssertTrue(message="개인정보 수집·이용에 동의해 주세요.") private boolean agreedToPrivacy;
+    @AssertTrue(message="만 19세 이상만 가입할 수 있습니다.") private boolean adultConfirmed;
+    private boolean marketingConsent;
+    @NotBlank private String termsVersion;
 
     // 사람이 보지 못하는 봇 방지용 숨김 필드
     private String website;

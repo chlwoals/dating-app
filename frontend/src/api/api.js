@@ -8,6 +8,8 @@ function resolveApiBaseUrl() {
     return envBaseUrl;
   }
 
+  if (import.meta.env.DEV) return `${window.location.origin}/api`;
+
   const hostname = window.location.hostname || "localhost";
   return `http://${hostname}:8082/api`;
 }
@@ -26,7 +28,7 @@ api.interceptors.request.use((config) => {
   const token = getToken();
   const isAuthRequest = config.url?.startsWith("/auth/");
 
-  if (token && !isAuthRequest) {
+  if (token && !isAuthRequest && !config.url?.startsWith("/admin/")) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
@@ -41,7 +43,8 @@ api.interceptors.response.use(
     const canTryRefresh = status === 401
       && originalRequest
       && !originalRequest._retry
-      && !originalRequest.url?.startsWith("/auth/");
+      && !originalRequest.url?.startsWith("/auth/")
+      && !originalRequest.url?.startsWith("/admin/");
 
     if (canTryRefresh) {
       originalRequest._retry = true;
@@ -56,7 +59,7 @@ api.interceptors.response.use(
       }
     }
 
-    if (status === 401 || status === 403) {
+    if (status === 401 && !originalRequest?.url?.startsWith("/admin/")) {
       clearToken();
     }
 

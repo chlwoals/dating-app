@@ -29,6 +29,8 @@ public class ProfileImageController {
     private final ProfileImageService profileImageService;
     private final FileStorageService fileStorageService;
 
+    @org.springframework.web.bind.annotation.DeleteMapping("/me/{id}") public List<UserProfileImageResponse> delete(Authentication a,@org.springframework.web.bind.annotation.PathVariable Long id){return profileImageService.delete(a.getName(),id);}
+    @org.springframework.web.bind.annotation.PutMapping("/me/{id}/main") public List<UserProfileImageResponse> main(Authentication a,@org.springframework.web.bind.annotation.PathVariable Long id){return profileImageService.main(a.getName(),id);}
     @GetMapping("/me")
     public List<UserProfileImageResponse> getMyImages(Authentication authentication) {
         return profileImageService.getMyImages(authentication.getName());

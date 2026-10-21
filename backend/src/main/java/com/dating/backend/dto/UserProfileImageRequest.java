@@ -21,8 +21,8 @@ public class UserProfileImageRequest {
     private String imageUrl;
 
     @NotNull
-    @Min(1)
-    @Max(5)
+    @Min(0)
+    @Max(6)
     // 사진 순서
     private Integer imageOrder;
 

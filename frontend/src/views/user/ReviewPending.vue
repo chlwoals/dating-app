@@ -38,60 +38,12 @@
           <p v-if="!minimumRequirementMet" class="sub-text">
             심사 승인 조건까지 사진 {{ remainingRequiredImages }}장을 더 등록해주세요.
           </p>
-          <p v-else class="sub-text">최소 조건을 충족했습니다. 원하면 최대 5장까지 더 등록할 수 있습니다.</p>
+          <p v-else class="sub-text">최소 조건을 충족했습니다. 원하면 최대 6장까지 더 등록할 수 있습니다.</p>
         </div>
       </div>
 
-      <div class="status-box progress-box">
-        <strong>업로드 진행률</strong>
-        <div class="progress-track" aria-hidden="true">
-          <div class="progress-fill" :style="{ width: `${uploadProgressPercent}%` }"></div>
-        </div>
-        <p class="sub-text">현재 {{ images.length }} / 5장 등록됨</p>
-      </div>
-
-      <form class="upload-form" @submit.prevent="saveImage">
-        <label>
-          <span>심사용 프로필 사진 파일</span>
-          <input
-            ref="fileInputRef"
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            @change="handleFileChange"
-            :disabled="!canUploadMore || reviewStatus.status === 'DELETED'"
-            required
-          />
-        </label>
-
-        <label>
-          <span>사진 순서</span>
-          <select v-model.number="form.imageOrder" :disabled="reviewStatus.status === 'DELETED'">
-            <option v-for="order in [1, 2, 3, 4, 5]" :key="order" :value="order">{{ order }}번</option>
-          </select>
-        </label>
-
-        <label class="checkbox-row">
-          <input v-model="form.isMain" type="checkbox" :disabled="!canUploadMore || reviewStatus.status === 'DELETED'" />
-          <span>대표 사진으로 지정</span>
-        </label>
-
-        <button class="primary-button" :disabled="loading || !canUploadMore || reviewStatus.status === 'DELETED'">
-          {{ loading ? '저장 중...' : uploadButtonLabel }}
-        </button>
-      </form>
-
-      <p v-if="!canUploadMore" class="message success">사진 5장을 모두 등록했습니다. 다른 순서를 선택하면 기존 사진을 새 사진으로 교체할 수 있습니다.</p>
-      <p v-if="message" class="message success">{{ message }}</p>
-      <p v-if="errorMessage" class="message error">{{ errorMessage }}</p>
-
-      <div class="image-list" v-if="images.length">
-        <div v-for="image in images" :key="image.id" class="image-item">
-          <img :src="toAbsoluteImageUrl(image.imageUrl)" alt="uploaded profile" />
-          <strong>{{ image.imageOrder }}번 사진{{ image.isMain ? ' · 대표' : '' }}</strong>
-          <p>{{ image.imageUrl }}</p>
-        </div>
-      </div>
-
+      <PhotoEditor @changed="photoChanged"/>
+      <p v-if="message" class="message success">{{message}}</p><p v-if="errorMessage" class="message error">{{errorMessage}}</p>
       <div class="helper-row">
         <button class="secondary-button" @click="submitReviewRequest" type="button" :disabled="loading || reviewStatus.status === 'DELETED'">
           {{ reviewActionLabel }}
@@ -111,6 +63,7 @@
 </template>
 
 <script setup>
+import PhotoEditor from "../../components/PhotoEditor.vue";
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import api from "../../api/api";
@@ -159,15 +112,15 @@ const statusLabel = computed(() => {
 
 const minimumRequirementMet = computed(() => images.value.length >= 2);
 const remainingRequiredImages = computed(() => Math.max(0, 2 - images.value.length));
-const canUploadMore = computed(() => images.value.length < 5);
-const uploadProgressPercent = computed(() => (images.value.length / 5) * 100);
+const canUploadMore = computed(() => images.value.length < 6);
+const uploadProgressPercent = computed(() => (images.value.length / 6) * 100);
 const showDeadlineWarning = computed(() => ["PENDING_REVIEW", "REJECTED"].includes(reviewStatus.value.status));
 const canSubmitReview = computed(() => (
   ["PENDING_REVIEW", "REJECTED"].includes(reviewStatus.value.status)
   && reviewStatus.value.profileComplete
   && reviewStatus.value.readyForReview
 ));
-const showReviewLock = computed(() => canSubmitReview.value && (reviewStatus.value.status === "PENDING_REVIEW" || reviewSubmitted.value));
+const showReviewLock = computed(() => reviewSubmitted.value && reviewStatus.value.status === "PENDING_REVIEW");
 const reviewActionLabel = computed(() => (reviewStatus.value.status === "REJECTED" ? "재심사 신청" : "가입 신청"));
 const reviewLockMessage = computed(() => (
   reviewStatus.value.status === "REJECTED"
@@ -226,9 +179,7 @@ const refreshStatus = async () => {
     ]);
     reviewStatus.value = statusRes.data;
     images.value = imagesRes.data;
-    reviewSubmitted.value = reviewStatus.value.status === "PENDING_REVIEW"
-      && reviewStatus.value.profileComplete
-      && reviewStatus.value.readyForReview;
+
     form.imageOrder = nextAvailableOrder.value;
 
     if (reviewStatus.value.status === "ACTIVE") {
@@ -240,6 +191,7 @@ const refreshStatus = async () => {
   }
 };
 
+const photoChanged = async (data) => { images.value=data; await refreshStatus(); };
 const submitReviewRequest = async () => {
   message.value = "";
   errorMessage.value = "";

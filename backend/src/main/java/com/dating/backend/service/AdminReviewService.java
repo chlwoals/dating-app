@@ -114,6 +114,7 @@ public class AdminReviewService {
     @Transactional
     public AdminReviewDecisionResponse approve(Long userId) {
         User user = getUser(userId);
+        if(!List.of("PENDING_REVIEW","REJECTED").contains(user.getStatus()))throw new ResponseStatusException(HttpStatus.CONFLICT,"가입 심사 대상이 아닙니다.");
         UserProfile profile = userProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로필 정보를 찾을 수 없습니다."));
         UserVerification verification = userVerificationRepository.findByUserId(userId)
@@ -131,7 +132,7 @@ public class AdminReviewService {
         }
 
         if ("HIGH_RISK".equals(user.getFraudReviewStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "고위험 스캠 의심 계정은 승인할 수 없습니다. 스캠 모니터링에서 먼저 확인해 주세요.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "고위험 스캠 의심 계정은 승인할 수 없습니다. 고객센터 상황실에서 먼저 확인해 주세요.");
         }
 
         user.setStatus("ACTIVE");
@@ -152,6 +153,7 @@ public class AdminReviewService {
     @Transactional
     public AdminReviewDecisionResponse reject(Long userId, AdminRejectRequest request) {
         User user = getUser(userId);
+        if(!List.of("PENDING_REVIEW","REJECTED").contains(user.getStatus()))throw new ResponseStatusException(HttpStatus.CONFLICT,"가입 심사 대상이 아닙니다.");
         user.setStatus("REJECTED");
         user.setReviewComment(request.getReviewComment());
         user.setReviewDeadlineAt(accountReviewPolicyService.createRejectedDeadline());

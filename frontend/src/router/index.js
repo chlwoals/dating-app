@@ -7,7 +7,8 @@ import ResetPassword from "../views/auth/ResetPassword.vue";
 import Signup from "../views/auth/Signup.vue";
 import SocialLogin from "../views/auth/SocialLogin.vue";
 import Chats from "../views/user/Chats.vue";
-import Home from "../views/user/Home.vue";
+import MatchStatus from "../views/user/MatchStatus.vue";
+import ChatRoom from "../views/user/ChatRoom.vue";
 import Profile from "../views/user/Profile.vue";
 import ProfileEdit from "../views/user/ProfileEdit.vue";
 import ProfilePhoneVerify from "../views/user/ProfilePhoneVerify.vue";
@@ -17,10 +18,18 @@ import SupportCenter from "../views/user/SupportCenter.vue";
 import Today from "../views/user/Today.vue";
 import UserLayout from "../views/user/UserLayout.vue";
 
+import MemberProfile from '../views/user/MemberProfile.vue';
+import Notifications from '../views/user/Notifications.vue';
+import Credits from '../views/user/Credits.vue';
+import Photos from '../views/user/Photos.vue';
+import Settings from '../views/user/Settings.vue';
+import AdminConsole from '../views/admin/AdminConsole.vue';
 const routes = [
   { path: "/", component: Login, meta: { guestOnly: true } },
-  { path: "/admin/reviews", component: AdminReviews },
-  { path: "/admin/safety", component: ScamMonitor },
+  { path: "/admin/reviews", redirect: "/admin/signup" },
+  { path: "/admin/safety", redirect: "/admin/support" },
+  { path: "/admin", redirect: "/admin/overview" },
+  { path: "/admin/:section", component: AdminConsole },
   { path: "/signup", component: Signup, meta: { guestOnly: true } },
   { path: "/reset-password", component: ResetPassword, meta: { guestOnly: true } },
   { path: "/review-pending", component: ReviewPending, meta: { requiresAuth: true } },
@@ -31,10 +40,17 @@ const routes = [
     component: UserLayout,
     meta: { requiresAuth: true, userApp: true },
     children: [
-      { path: "", redirect: "/home" },
-      { path: "/home", component: Home },
+      { path: "", redirect: "/today" },
+      { path: "/home", redirect: "/today" },
       { path: "/today", component: Today },
+      { path: "/matches", component: MatchStatus },
       { path: "/chats", component: Chats },
+      { path: "/chats/:id", component: ChatRoom },
+      { path: "/members/:id", component: MemberProfile },
+      { path: "/notifications", component: Notifications },
+      { path: "/credits", component: Credits },
+      { path: "/profile/photos", component: Photos },
+      { path: "/settings", component: Settings },
       { path: "/profile", component: Profile },
       { path: "/profile/edit", component: ProfileEdit },
       { path: "/profile/phone", component: ProfilePhoneVerify },
@@ -54,7 +70,7 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.guestOnly && hasToken()) {
-    return "/home";
+    return "/today";
   }
 
   return true;

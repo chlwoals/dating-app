@@ -28,4 +28,8 @@ public class AdminUserReportResponse {
     private String adminNote;
     // 신고 시각
     private LocalDateTime createdAt;
+    private String resolutionAction;
+    private Integer suspensionDays;
+    private java.time.Instant resolvedAt;
+    private String publicReason;
 }

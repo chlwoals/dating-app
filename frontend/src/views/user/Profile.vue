@@ -1,30 +1,12 @@
 <template>
   <section class="profile-page">
     <div v-if="profile" class="profile-shell">
-      <header class="page-card">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Profile</p>
-            <h1>내 프로필</h1>
-            <p class="description">
-              프로필 정보와 심사 진행 상태를 확인하고 필요한 화면으로 바로 이동할 수 있습니다.
-            </p>
-          </div>
-          <div class="header-actions">
-            <button class="ghost-button" type="button" @click="goToEditProfile">프로필 수정</button>
-            <button class="ghost-button" type="button" @click="goToSupport">고객센터</button>
-            <button class="ghost-button" type="button" @click="goToPhoneVerify">{{ phoneActionLabel }}</button>
-            <button class="ghost-button" type="button" @click="goToReview">사진 심사</button>
-            <button class="logout-button" type="button" @click="logout">로그아웃</button>
-          </div>
-        </div>
-      </header>
 
+      <section class="page-card profile-shortcuts"><RouterLink to="/settings">설정 <span>›</span></RouterLink><RouterLink to="/profile/photos">내 사진 관리 <span>›</span></RouterLink><RouterLink to="/credits">크레딧 충전·사용내역 <span>›</span></RouterLink><RouterLink to="/notifications">알림 모아보기 <span>›</span></RouterLink></section>
       <section class="page-card">
         <div class="section-head">
           <div>
             <p class="section-label">Summary</p>
-            <h2>계정 요약</h2>
           </div>
           <div class="summary-actions">
             <span class="status-pill">{{ profile.status }}</span>
@@ -59,7 +41,6 @@
         <div class="section-head">
           <div>
             <p class="section-label">Preview</p>
-            <h2>프로필 미리보기</h2>
           </div>
         </div>
 
@@ -104,11 +85,20 @@
           <p><strong>자기소개</strong><br />{{ profile.introduction || "미입력" }}</p>
         </div>
       </section>
+      <section class="page-card"><details class="profile-menu"><summary>계정 및 설정</summary><div class="header-actions">
+            <button class="ghost-button" type="button" @click="goToEditProfile">프로필 수정</button>
+            <button class="ghost-button" type="button" @click="goToSupport">고객센터</button>
+            <button class="ghost-button" type="button" @click="goToPhoneVerify">{{ phoneActionLabel }}</button>
+            <button class="ghost-button" type="button" @click="goToReview">사진 심사</button>
+            <button class="logout-button" type="button" @click="logout">로그아웃</button>
+          </div></details></section>
     </div>
   </section>
+
 </template>
 
 <script setup>
+
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import api from "../../api/api";
@@ -261,3 +251,7 @@ h1, h2 { margin: 0; color: #31211d; }
   .summary-actions { width: 100%; justify-content: space-between; }
 }
 </style>
+
+
+
+<style scoped>.profile-shortcuts{display:grid;gap:0}.profile-shortcuts a{display:flex;justify-content:space-between;padding:17px 0;color:#4b382e;text-decoration:none;font-size:14px;border-bottom:1px solid #f0e7e1}.profile-shortcuts a:last-child{border:0}.profile-shortcuts span{color:#ac8e7c}</style>

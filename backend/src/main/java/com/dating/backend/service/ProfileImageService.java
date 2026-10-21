@@ -27,6 +27,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProfileImageService {
 
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager em;
+    private final com.dating.backend.matching.ProfileModeration moderation;
     private final UserRepository userRepository;
     private final UserProfileImageRepository userProfileImageRepository;
     private final UserProfileRepository userProfileRepository;
@@ -45,11 +47,13 @@ public class ProfileImageService {
     @Transactional
     public List<UserProfileImageResponse> saveMyImage(String email, UserProfileImageRequest request) {
         User user = getUserByEmail(email);
+        em.lock(user,jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
         validateImageOrder(request.getImageOrder());
+        moderation.beforeEdit(user);
 
-        if (userProfileImageRepository.countByUserId(user.getId()) >= 5
+        if (userProfileImageRepository.countByUserId(user.getId()) >= 6
                 && userProfileImageRepository.findByUserIdAndImageOrder(user.getId(), request.getImageOrder()).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "프로필 사진은 최대 5장까지 등록할 수 있습니다.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "프로필 사진은 최대 6장까지 등록할 수 있습니다.");
         }
 
         if (Boolean.TRUE.equals(request.getIsMain())) {
@@ -73,6 +77,21 @@ public class ProfileImageService {
         return getMyImages(email);
     }
 
+    @Transactional public List<UserProfileImageResponse> delete(String email,Long id){
+        var u=getUserByEmail(email);em.lock(u,jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        var image=userProfileImageRepository.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if(!u.getId().equals(image.getUserId()))throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if("ACTIVE".equals(u.getStatus())&&userProfileImageRepository.countByUserId(u.getId())<=1)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"대표사진 1장은 유지해 주세요. 사진을 눌러 교체할 수 있습니다.");
+        moderation.beforeEdit(u);
+        userProfileImageRepository.delete(image);userProfileImageRepository.flush();ensureMainImage(u.getId());refreshReviewProgress(u);return getMyImages(email);
+    }
+    @Transactional public List<UserProfileImageResponse> main(String email,Long id){
+        var u=getUserByEmail(email);em.lock(u,jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        var image=userProfileImageRepository.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if(!u.getId().equals(image.getUserId()))throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        moderation.beforeEdit(u);
+        var images=userProfileImageRepository.findByUserIdOrderByImageOrderAsc(u.getId());images.forEach(i->i.setIsMain(false));userProfileImageRepository.saveAllAndFlush(images);image.setIsMain(true);userProfileImageRepository.saveAndFlush(image);return getMyImages(email);
+    }
     @Transactional(readOnly = true)
     public ReviewStatusResponse getReviewStatus(String email) {
         User user = getUserByEmail(email);
@@ -224,8 +243,8 @@ public class ProfileImageService {
     }
 
     private void validateImageOrder(Integer imageOrder) {
-        if (imageOrder == null || imageOrder < 1 || imageOrder > 5) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진 순서는 1~5 사이여야 합니다.");
+        if (imageOrder == null || imageOrder < 0 || imageOrder > 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진 순서는 1~6 사이여야 합니다.");
         }
     }
 }

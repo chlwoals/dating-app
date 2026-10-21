@@ -19,12 +19,12 @@
       </div>
     </div>
 
-    <SupportChatbot />
+
   </section>
 </template>
 
 <script setup>
-import SupportChatbot from "../../components/SupportChatbot.vue";
+
 </script>
 
 <style scoped>

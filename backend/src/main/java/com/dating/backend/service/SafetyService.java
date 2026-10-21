@@ -34,6 +34,9 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class SafetyService {
 
+    private final com.dating.backend.matching.InboxService inbox;
+    private final com.dating.backend.matching.SanctionService sanctions;
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager em;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserReportRepository userReportRepository;
@@ -152,8 +155,10 @@ public class SafetyService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
 
+        if("DELETED".equals(user.getStatus()))throw new ResponseStatusException(HttpStatus.CONFLICT,"탈퇴한 계정에는 조치할 수 없습니다.");
         String action = request.getAction().toUpperCase(Locale.ROOT);
         String note = request.getAdminNote();
+        if(user.getSanctionType()!=null){if("RELEASE_ACCOUNT".equals(action)){sanctions.lift(userId,note);return new MessageResponse("정지를 해제했습니다.");}throw new ResponseStatusException(HttpStatus.CONFLICT,"신고로 정지된 계정입니다. 정지 해제를 먼저 처리해 주세요.");}
 
         switch (action) {
             case "MARK_NORMAL" -> {
@@ -222,7 +227,7 @@ public class SafetyService {
     @Transactional(readOnly = true)
     public List<AdminUserReportResponse> getReports(String status) {
         String normalizedStatus = (status == null || status.isBlank()) ? "OPEN" : status;
-        return userReportRepository.findByStatusOrderByCreatedAtDesc(normalizedStatus).stream()
+        return ("ALL".equals(normalizedStatus)?userReportRepository.findAll():userReportRepository.findByStatusOrderByCreatedAtDesc(normalizedStatus)).stream()
                 .map(report -> new AdminUserReportResponse(
                         report.getId(),
                         report.getReporterUserId(),
@@ -231,19 +236,22 @@ public class SafetyService {
                         report.getDetail(),
                         report.getStatus(),
                         report.getAdminNote(),
-                        report.getCreatedAt()
+                        report.getCreatedAt(),report.getResolutionAction(),report.getSuspensionDays(),report.getResolvedAt(),report.getPublicReason()
                 ))
                 .toList();
     }
 
     @Transactional
     public MessageResponse resolveReport(Long reportId, ResolveReportRequest request) {
-        UserReport report = userReportRepository.findById(reportId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."));
-        report.setStatus("RESOLVED");
-        report.setAdminNote(request.getAdminNote());
-        userReportRepository.save(report);
-        return new MessageResponse("신고가 처리되었습니다.");
+        UserReport report=em.find(UserReport.class,reportId,jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        if(report==null)throw new ResponseStatusException(HttpStatus.NOT_FOUND,"신고를 찾을 수 없습니다.");
+        if("RESOLVED".equals(report.getStatus()))return new MessageResponse("이미 처리된 신고입니다.");
+        if(request.getAdminNote()==null||request.getAdminNote().isBlank()||request.getAdminNote().length()>1000)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"처리 메모를 입력해 주세요.");
+        sanctions.apply(report.getReportedUserId(),reportId,request.getAction(),request.getDays(),request.getPublicReason());
+        report.setStatus("RESOLVED");report.setAdminNote(request.getAdminNote());report.setResolutionAction(request.getAction());report.setSuspensionDays("TEMPORARY".equals(request.getAction())?request.getDays():null);report.setPublicReason(request.getPublicReason());report.setResolvedAt(java.time.Instant.now());
+        String outcome=switch(request.getAction()){case "WARNING"->"경고 조치";case "TEMPORARY"->"기간 정지 조치";case "PERMANENT"->"영구 정지 조치";default->"검토 완료 (추가 조치 없음)";};
+        inbox.add(report.getReporterUserId(),"REPORT:"+reportId,"신고 처리 결과","신고 #"+reportId+": "+outcome+"되었습니다.","/notifications");
+        return new MessageResponse("신고 처리와 계정 조치를 저장했습니다.");
     }
 
     private User getUserByEmail(String email) {

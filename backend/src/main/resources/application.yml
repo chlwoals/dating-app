@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.local/push.properties
   datasource:
     url: ${DB_URL:jdbc:mariadb://127.0.0.1:3306/dating_db}
     username: ${DB_USERNAME:dating_user}
@@ -17,10 +19,10 @@ spring:
         format_sql: true
 app:
   jwt:
-    secret: change-this-secret-key-change-this-secret-key
+    secret: ${JWT_SECRET:change-this-secret-key-change-this-secret-key}
     expiration-ms: 3600000
   admin:
-    review-key: change-admin-review-key
+    review-key: ${ADMIN_REVIEW_KEY:change-admin-review-key}
   upload:
     dir: uploads
   auth:

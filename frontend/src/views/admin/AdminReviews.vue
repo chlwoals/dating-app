@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="admin-page">
     <div class="dashboard-shell">
       <header class="hero-card">
@@ -310,7 +310,7 @@
           <div>
             <p class="eyebrow">Support Desk</p>
             <h2>고객 문의</h2>
-            <p class="sub-copy">홈 챗봇과 고객센터에서 접수된 문의를 확인하고 답변 상태를 관리합니다.</p>
+            <p class="sub-copy">고객센터에서 접수된 문의를 확인하고 답변 상태를 관리합니다.</p>
           </div>
           <div class="section-tools">
             <span class="pill-count">현재 {{ inquiries.length }}건</span>
@@ -522,7 +522,7 @@ const categoryCards = computed(() => [
   { key: "review", label: "가입 심사", count: `${reviewPendingCount.value}명`, description: "사진과 프로필 심사를 우선 처리합니다.", theme: "warm" },
   { key: "risk", label: "위험 계정", count: `${highRiskCount.value + watchCount.value}명`, description: "스캠 의심 계정을 재검토하고 제한 상태를 관리합니다.", theme: "amber" },
   { key: "report", label: "신고 처리", count: `${openReportCount.value}건`, description: "접수된 사용자 신고를 확인하고 처리 완료로 전환합니다.", theme: "mint" },
-  { key: "support", label: "고객 문의", count: `${openInquiryCount.value + inProgressInquiryCount.value}건`, description: "챗봇과 고객센터에서 접수된 문의에 답변을 남깁니다.", theme: "soft" },
+  { key: "support", label: "고객 문의", count: `${openInquiryCount.value + inProgressInquiryCount.value}건`, description: "고객센터에서 접수된 문의에 답변을 남깁니다.", theme: "soft" },
 ]);
 
 // Load review, safety, and report data together so the admin page stays in sync.

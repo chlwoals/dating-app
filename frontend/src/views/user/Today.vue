@@ -1,355 +1,258 @@
 <template>
-  <section class="today-page">
-    <div v-if="profile && userSummary" class="today-shell">
-      <header class="hero-card">
-        <div class="hero-copy">
-          <p class="eyebrow">Today Match</p>
-          <span class="status-pill" :class="statusClass">{{ statusLabel }}</span>
-          <h1>{{ heroTitle }}</h1>
-          <p class="description">{{ heroDescription }}</p>
-        </div>
+  <section class="today-page daily-matches">
+    <header class="match-heading"><h1 class="match-eyebrow">TODAY'S CONNECTION</h1><RecommendationSettings /></header>
 
-        <div class="hero-stats">
-          <article class="stat-card">
-            <span>프로필 완성도</span>
-            <strong>{{ profileCompletion }}%</strong>
-          </article>
-          <article class="stat-card">
-            <span>등록 사진</span>
-            <strong>{{ images.length }}장</strong>
-          </article>
-          <article class="stat-card">
-            <span>계정 방식</span>
-            <strong>{{ providerLabel }}</strong>
-          </article>
-        </div>
-      </header>
-
-      <section class="section-card">
-        <div class="section-head">
-          <div>
-            <p class="section-label">Discover</p>
-            <h2>오늘의 인연 추천</h2>
-          </div>
-          <span class="section-caption">추천 기능은 데모용 카드로 먼저 연결되어 있습니다.</span>
-        </div>
-
-        <div class="discover-grid">
-          <article v-for="card in recommendationCards" :key="card.id" class="discover-card">
-            <div class="discover-photo" :style="{ background: card.background }">
-              <div class="discover-overlay">
-                <span>{{ card.badge }}</span>
-                <strong>{{ card.name }}, {{ card.age }}</strong>
-              </div>
-            </div>
-
-            <div class="discover-body">
-              <div class="discover-meta">
-                <span>{{ card.region }}</span>
-                <span>{{ card.job }}</span>
-              </div>
-              <p>{{ card.introduction }}</p>
-              <div class="tag-row">
-                <span v-for="tag in card.tags" :key="tag" class="tag">{{ tag }}</span>
-              </div>
-
-              <div class="action-row">
-                <button class="action-button pass" @click="markReaction(card.id, 'pass')">패스</button>
-                <button class="action-button detail" @click="selectedCard = card">상세 보기</button>
-                <button class="action-button like" @click="markReaction(card.id, 'like')">좋아요</button>
-              </div>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="section-card">
-        <div class="section-head compact">
-          <div>
-            <p class="section-label">Preview</p>
-            <h2>반응 현황</h2>
-          </div>
-        </div>
-
-        <div class="summary-grid">
-          <article class="summary-card accent">
-            <span class="summary-badge">오늘의 반응</span>
-            <strong>{{ likedCount }}명에게 좋아요를 보냈어요</strong>
-            <p>실제 매칭 기능이 붙기 전까지는 데모 반응 상태로 보여드립니다.</p>
-          </article>
-
-          <article class="summary-card">
-            <ul class="queue-list">
-              <li>
-                <strong>{{ likedCount }}명</strong>
-                <span>좋아요 보낸 카드</span>
-              </li>
-              <li>
-                <strong>{{ passedCount }}명</strong>
-                <span>패스한 카드</span>
-              </li>
-              <li>
-                <strong>{{ likedCount + passedCount }}</strong>
-                <span>오늘 반응 수</span>
-              </li>
-            </ul>
-          </article>
-        </div>
-      </section>
+    <div v-if="!deck" class="match-notice" role="status">
+      <span class="notice-heart" aria-hidden="true">♡</span>
+      <h2>{{ loading ? '오늘의 인연을 준비하고 있어요' : '잠시 연결이 어려워요' }}</h2>
+      <p>{{ loading ? '불러오는 중…' : errorMessage }}</p>
+      <button v-if="!loading" type="button" class="retry-button" @click="loadDeck">다시 불러오기</button>
     </div>
 
-    <div v-else class="loading-shell">
-      <div class="loading-card">
-        <p class="eyebrow">Loading</p>
-        <h2>오늘의 인연을 불러오는 중이에요</h2>
-        <p>추천 카드와 프로필 요약을 준비하고 있습니다.</p>
+    <template v-else>
+      <div class="deck-viewport">
+      <div ref="track" class="match-track" role="region" aria-roledescription="carousel" aria-label="오늘의 인연 카드"
+           tabindex="0" @scroll.passive="onScroll" @keydown.left.prevent="goTo(activeIndex - 1)" @keydown.right.prevent="goTo(activeIndex + 1)">
+        <article v-for="card in deck.cards" :key="`${deck.cycleDay}-${card.slot}`" class="match-slide"
+                 :aria-label="card.slot>=6?'추가 인연':`${card.slot < 3 ? '오전' : '오후'} 인연 ${card.slot % 3 + 1}`">
+          <div class="flip-scene" :class="{ 'is-open': card.state === 'OPEN' }">
+            <div class="flip-inner">
+              <button class="card-cover" type="button" :disabled="card.state !== 'HIDDEN' || busySlot !== null"
+                      :tabindex="activeIndex === card.slot && card.state === 'HIDDEN' ? 0 : -1"
+                      :aria-hidden="card.state === 'OPEN'" @click="reveal(card)">
+                <span class="cover-ornament" aria-hidden="true"><span>♡</span></span>
+                <span class="cover-copy">
+                  <template v-if="card.state === 'LOCKED'">
+                    <span class="countdown">{{ remaining(card.unlockAt) }}</span><span>후 오픈</span>
+                  </template>
+                  <template v-else-if="card.state === 'PAUSED'"><strong>휴식 중</strong><span>설정에서 휴식 모드를 해제해 주세요.</span></template><template v-else-if="card.state === 'EMPTY'">
+                    <strong>추천 준비 중</strong>
+                  </template>
+                  <template v-else-if="card.state === 'UNAVAILABLE'">
+                    <strong>현재 확인할 수 없는 카드입니다</strong>
+                  </template>
+                  <template v-else>
+                    <span>{{ busySlot === card.slot ? '불러오는 중…' : '탭하여 열기' }}</span>
+                  </template>
+                </span>
+              </button>
+
+              <div class="card-person" :aria-hidden="card.state !== 'OPEN'">
+                <template v-if="card.profile">
+                  <div class="person-photo"><button class="card-menu" aria-label="상대 메뉴" :tabindex="activeIndex === card.slot ? 0 : -1" @click="actions.open({id:card.profile.userId,nickname:card.profile.nickname},'report')">⋯</button>
+                    <RouterLink class="photo-profile-link" :to="`/members/${card.profile.userId}`" :aria-label="`${card.profile.nickname} 프로필 보기`" :tabindex="activeIndex === card.slot ? 0 : -1">
+                    <img v-if="!failedImages[card.slot] && photoUrl(card.profile.imageUrl)" :src="photoUrl(card.profile.imageUrl)"
+                         :alt="`${card.profile.nickname}님의 프로필 사진`" draggable="false" @error="failedImages[card.slot] = true" />
+                    <span v-else class="photo-placeholder" aria-label="사진을 불러올 수 없음">♡</span></RouterLink>
+                    <div class="person-title"><h2><RouterLink :to="`/members/${card.profile.userId}`" :tabindex="activeIndex === card.slot ? 0 : -1">{{ card.profile.nickname }} <span>{{ card.profile.age }}</span></RouterLink></h2><p>{{ card.profile.region }}</p></div>
+                  </div>
+                  <div class="reaction-buttons">
+                    <button type="button" class="like-button" :aria-pressed="card.reaction === 'LIKE'" :disabled="busySlot !== null || card.reaction === 'LIKE'" :tabindex="activeIndex === card.slot ? 0 : -1" @click="react(card,'LIKE')">{{ card.reaction === 'LIKE' ? '♥ 보낸 좋아요' : '♡ 좋아요' }}</button>
+                    <button type="button" :tabindex="activeIndex === card.slot ? 0 : -1" @click="direct.open(card.profile.userId)">메시지 보내기</button>
+                  </div>
+                  <div class="person-details">
+                    <div class="person-tags"><span v-if="card.profile.job">{{ card.profile.job }}</span><span v-if="card.profile.mbti">{{ card.profile.mbti }}</span></div>
+                    <p v-if="card.profile.introduction" class="person-intro">{{ card.profile.introduction }}</p>
+
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="match-slide" aria-label="크레딧 추가 오픈 안내">
+          <div class="credit-card">
+<div class="credit-copy"><span class="credit-symbol" aria-hidden="true">＋</span><p>크레딧 구매 시<br>추가 오픈 가능</p></div>
+<button class="retry-button" :disabled="extraBusy" @click="openExtra">10크레딧으로 1장 열기</button><span class="credit-status">1장당 10크레딧 · 횟수 제한 없음</span>
+          </div>
+        </article>
       </div>
-    </div>
 
-    <div v-if="selectedCard" class="modal-backdrop" @click.self="selectedCard = null">
-      <div class="modal-card">
-        <div class="modal-photo" :style="{ background: selectedCard.background }">
-          <span>{{ selectedCard.badge }}</span>
-          <strong>{{ selectedCard.name }}, {{ selectedCard.age }}</strong>
-        </div>
-        <div class="modal-body">
-          <h3>{{ selectedCard.name }}의 카드</h3>
-          <p>{{ selectedCard.introduction }}</p>
-          <div class="tag-row spacious">
-            <span v-for="tag in selectedCard.tags" :key="tag" class="tag soft">{{ tag }}</span>
-          </div>
-          <div class="modal-list">
-            <div>
-              <dt>활동 지역</dt>
-              <dd>{{ selectedCard.region }}</dd>
-            </div>
-            <div>
-              <dt>직업</dt>
-              <dd>{{ selectedCard.job }}</dd>
-            </div>
-            <div>
-              <dt>추천 이유</dt>
-              <dd>{{ selectedCard.reason }}</dd>
-            </div>
-          </div>
-          <div class="action-row modal-actions">
-            <button class="action-button pass" @click="markReaction(selectedCard.id, 'pass'); selectedCard = null">패스</button>
-            <button class="action-button like" @click="markReaction(selectedCard.id, 'like'); selectedCard = null">좋아요</button>
-          </div>
-        </div>
+        <button v-if="activeIndex > 0" type="button" class="peek-control previous" aria-label="이전 카드" @click="goTo(activeIndex - 1)"></button>
+        <button v-if="activeIndex < deck.cards.length" type="button" class="peek-control next" aria-label="다음 카드" @click="goTo(activeIndex + 1)"></button>
       </div>
-    </div>
+      <p v-if="errorMessage" class="match-error" role="alert">{{ errorMessage }} <button type="button" @click="loadDeck">다시 확인</button></p>
+    </template>
+    <dialog ref="extraModal" class="social-dialog" @cancel="extraBusy&&$event.preventDefault()"><h2>추가 인연 열기</h2><template v-if="extraQuote"><p>10크레딧으로 오늘의 인연 1장을 추가로 엽니다.</p><p>보유 {{extraQuote.balance}}크레딧 · 다음 오전 8시 초기화</p><p>이미 소개한 상대는 제외하며, 조건에 맞는 새 인연이 없으면 차감되지 않습니다.</p><RouterLink v-if="extraQuote.balance<10" to="/credits">크레딧 충전하기</RouterLink><button :disabled="extraBusy" @click="extraModal.close()">취소</button><button class="retry-button" :disabled="extraBusy||extraQuote.balance<10" @click="buyExtra">{{extraBusy?'처리 중…':'10크레딧 사용 후 열기'}}</button></template><p v-if="extraError" role="alert">{{extraError}}</p></dialog>
+    <DirectMessageDialog ref="direct" /><MemberActions ref="actions" @changed="loadDeck"/>
   </section>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import api from "../../api/api";
-import { clearToken } from "../../utils/auth";
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import api from '../../api/api';
+import {requestId} from '../../components/requestId';
+import { acknowledgeNotifications } from '../../components/notificationEvents';
+import RecommendationSettings from '../../components/RecommendationSettings.vue';
+import DirectMessageDialog from '../../components/DirectMessageDialog.vue';
+import MemberActions from '../../components/MemberActions.vue';
+const direct = ref(),actions=ref();
 
-const router = useRouter();
-const userSummary = ref(null);
-const profile = ref(null);
-const images = ref([]);
-const selectedCard = ref(null);
-const reactions = ref({});
+const extraModal=ref(),extraQuote=ref(),extraBusy=ref(false),extraError=ref('');let pendingExtra;
+async function openExtra(){if(extraBusy.value)return;extraBusy.value=true;extraError.value='';try{extraQuote.value=(await api.get('/matches/today/extra')).data;if(!pendingExtra||pendingExtra.cycleDay!==extraQuote.value.cycleDay)pendingExtra={cycleDay:extraQuote.value.cycleDay,expectedCost:extraQuote.value.cost,requestId:requestId()};extraModal.value.showModal();}catch(e){errorMessage.value=e.response?.data?.message||'가격을 불러오지 못했어요.';}finally{extraBusy.value=false;}}
+async function buyExtra(){if(extraBusy.value||!extraQuote.value)return;extraBusy.value=true;extraError.value='';try{const {data}=await api.post('/matches/today/extra',pendingExtra);pendingExtra=null;await loadDeck();extraModal.value.close();await nextTick();goTo(data.slot);}catch(e){extraError.value=e.response?.data?.message||'결과를 확인하지 못했어요. 다시 눌러도 중복 차감되지 않습니다.';}finally{extraBusy.value=false;}}
+const deck = ref(null);
+const loading = ref(false);
+const errorMessage = ref('');
+const busySlot = ref(null);
+const activeIndex = ref(0);
+const failedImages = ref({});
+const track = ref(null);
+const now = ref(Date.now());
+let serverOffset = 0;
+let timer;
+let retryAt = 0;
+let disposed = false;
 
-const likedCount = computed(() => Object.values(reactions.value).filter((value) => value === "like").length);
-const passedCount = computed(() => Object.values(reactions.value).filter((value) => value === "pass").length);
-
-const profileCompletion = computed(() => {
-  if (!profile.value) return 0;
-  const fields = [profile.value.job, profile.value.mbti, profile.value.personality, profile.value.idealType, profile.value.introduction];
-  const completed = fields.filter((value) => value && String(value).trim()).length;
-  return Math.round((completed / fields.length) * 100);
-});
-
-const providerLabel = computed(() => {
-  const provider = profile.value?.provider;
-  if (provider === "PHONE") return "전화번호";
-  return "자체 이메일";
-});
-
-const statusLabel = computed(() => {
-  const status = profile.value?.status;
-  if (status === "ACTIVE") return "이용 가능";
-  if (status === "PENDING_REVIEW") return "심사 진행 중";
-  if (status === "REJECTED") return "보완 필요";
-  if (status === "SUSPENDED") return "이용 제한";
-  return "상태 확인 중";
-});
-
-const statusClass = computed(() => {
-  const status = profile.value?.status;
-  if (status === "ACTIVE") return "status-active";
-  if (status === "PENDING_REVIEW") return "status-pending";
-  if (status === "REJECTED") return "status-rejected";
-  if (status === "SUSPENDED") return "status-suspended";
-  return "";
-});
-
-const heroTitle = computed(() => {
-  if (!profile.value) return "오늘의 인연을 준비하고 있어요";
-  return `${profile.value.region || '내 주변'}에서 어울리는 인연을 추천드릴게요`;
-});
-
-const heroDescription = computed(() => {
-  if (!profile.value) return "프로필을 바탕으로 추천 카드를 구성하고 있습니다.";
-  return `${profile.value.mbti ? `${profile.value.mbti} 성향과 ` : ''}${profile.value.introduction ? '자기소개를 기준으로 ' : ''}오늘의 추천 카드를 준비했어요.`;
-});
-
-const recommendationCards = computed(() => {
-  if (!profile.value) return [];
-  const region = profile.value.region || "서울";
-  const ideal = profile.value.idealType || "대화가 잘 통하는 사람";
-  const mbti = profile.value.mbti || "감성파";
-
-  return [
-    {
-      id: 1,
-      name: "서윤",
-      age: 29,
-      region,
-      job: "브랜드 디자이너",
-      badge: "오늘 잘 맞는 카드",
-      introduction: `${ideal}을 중요하게 보는 분위기를 반영한 차분한 대화형 추천 카드예요.`,
-      tags: [mbti, "주말 데이트", "카페 취향"],
-      reason: "이상형 문장과 자기소개 결이 비슷해서 첫 카드로 배치했어요.",
-      background: "linear-gradient(135deg, #f5b490 0%, #f8d6be 100%)",
-    },
-    {
-      id: 2,
-      name: "민지",
-      age: 31,
-      region: `${region.split(" ")[0]} 근교`,
-      job: "콘텐츠 마케터",
-      badge: "대화 템포가 잘 맞아요",
-      introduction: "자기소개 길이와 생활 패턴 기준으로 부담 없이 대화가 가능한 카드로 준비했어요.",
-      tags: ["가벼운 한잔", "전시회", "사진 취향"],
-      reason: "라이프스타일 정보가 현재 프로필과 비교적 잘 맞는 카드예요.",
-      background: "linear-gradient(135deg, #ef8c74 0%, #f3c3b2 100%)",
-    },
-    {
-      id: 3,
-      name: "지우",
-      age: 27,
-      region: "같은 생활권",
-      job: "서비스 기획자",
-      badge: "프로필 완성도 기반 추천",
-      introduction: "직업, MBTI, 자기소개가 채워질수록 이런 메인 카드가 실제 추천 결과로 더 정교해질 수 있어요.",
-      tags: ["비흡연", "무교", "깊은 대화"],
-      reason: "현재 프로필 정보가 반영되면 어떤 유형의 추천이 보이는지 보여주는 카드입니다.",
-      background: "linear-gradient(135deg, #d9826b 0%, #f2b8a3 100%)",
-    },
-  ];
-});
-
-async function fetchProfileWithFallback() {
+function remaining(target) {
+  const seconds = Math.max(0, Math.ceil((Date.parse(target) - now.value) / 1000));
+  return `${Math.floor(seconds / 3600)}시간 ${String(Math.floor(seconds % 3600 / 60)).padStart(2, '0')}분 ${String(seconds % 60).padStart(2, '0')}초`;
+}
+function photoUrl(path) {
   try {
-    const { data } = await api.get("/profile/me");
-    return data;
-  } catch (error) {
-    if (error.response?.status !== 404) {
-      throw error;
+    const url = new URL(path, new URL(api.defaults.baseURL, window.location.href));
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch { return ''; }
+}
+async function loadDeck() {
+  if (loading.value || disposed) return;
+  loading.value = true;
+  errorMessage.value = '';
+  try {
+    const { data } = await api.get('/matches/today');
+    if (disposed) return;
+    const changed = deck.value?.cycleDay !== data.cycleDay;
+    serverOffset = Date.parse(data.serverNow) - Date.now();
+    now.value = Date.now() + serverOffset;
+    deck.value = data;
+    acknowledgeNotifications([data.eventKey]);
+    if (changed) {
+      failedImages.value = {};
+      activeIndex.value = 0;
+      await nextTick();
+      goTo(0, false);
     }
-
-    const { data } = await api.get("/user/me");
-    return {
-      ...data,
-      region: "",
-      job: "",
-      mbti: "",
-      personality: "",
-      idealType: "",
-      introduction: "",
-      smokingStatus: "NON_SMOKER",
-      drinkingStatus: "NONE",
-      religion: "NONE",
-    };
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || '인연을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
+  } finally {
+    loading.value = false;
+    retryAt = Date.now() + 15000;
   }
 }
-
-onMounted(async () => {
-  try {
-    const [{ data: me }, myProfile, { data: myImages }] = await Promise.all([
-      api.get("/user/me"),
-      fetchProfileWithFallback(),
-      api.get("/profile-images/me"),
-    ]);
-
-    if (me.status === "SUSPENDED") {
-      window.alert("운영 정책상 이용이 제한되었습니다.");
-      clearToken();
-      router.replace("/");
-      return;
-    }
-
-    if (me.status !== "ACTIVE") {
-      router.replace("/review-pending");
-      return;
-    }
-
-    userSummary.value = me;
-    profile.value = myProfile;
-    images.value = myImages;
-  } catch (error) {
-    clearToken();
-    router.replace("/");
-  }
-});
-
-function markReaction(cardId, type) {
-  reactions.value = {
-    ...reactions.value,
-    [cardId]: type,
-  };
+async function reveal(card) {
+  if (card.state !== 'HIDDEN' || busySlot.value !== null) return;
+  await updateCard(card, 'reveal');
 }
+async function react(card, reaction) {
+  if (busySlot.value !== null || card.reaction === reaction) return;
+  await updateCard(card, 'reaction', { reaction });
+}
+async function updateCard(card, action, body) {
+  const cycle = deck.value.cycleDay;
+  busySlot.value = card.slot;
+  errorMessage.value = '';
+  try {
+    const { data } = await api.post(`/matches/today/${cycle}/${card.slot}/${action}`, body);
+    if (!disposed && deck.value?.cycleDay === cycle) deck.value.cards[card.slot] = data;
+  } catch (error) {
+    const message = error.response?.data?.message || '연결이 원활하지 않아요. 다시 시도해 주세요.';
+    if ([403, 409].includes(error.response?.status)) await loadDeck();
+    errorMessage.value = message;
+  } finally { busySlot.value = null; }
+}
+function goTo(index, smooth = true) {
+  if (!track.value) return;
+  const bounded = Math.max(0, Math.min(deck.value?.cards.length||6, index));
+  const slide = track.value.children[bounded];
+  if (!slide) return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  track.value.scrollTo({ left: slide.offsetLeft - (track.value.clientWidth - slide.clientWidth) / 2, behavior: smooth && !reduceMotion ? 'smooth' : 'instant' });
+  activeIndex.value = bounded;
+}
+function onScroll() {
+  if (!track.value) return;
+  const left = track.value.scrollLeft;
+  const centerOffset = (track.value.clientWidth - track.value.children[0].clientWidth) / 2;
+  let closest = 0;
+  [...track.value.children].forEach((slide, index, slides) => {
+    if (Math.abs(slide.offsetLeft - centerOffset - left) < Math.abs(slides[closest].offsetLeft - centerOffset - left)) closest = index;
+  });
+  activeIndex.value = closest;
+}
+function tick() {
+  now.value = Date.now() + serverOffset;
+  if (!deck.value) return;
+  if (now.value >= Date.parse(deck.value.resetAt)) {
+    // Remove yesterday's revealed profiles even if the refresh request fails.
+    deck.value = null;
+    loadDeck();
+  } else if (now.value >= Date.parse(deck.value.nextRefreshAt) && Date.now() >= retryAt) loadDeck();
+}
+function resume() { if (!document.hidden) { tick(); loadDeck(); } }
+onMounted(() => {
+  loadDeck(); timer = window.setInterval(tick, 1000);
+  document.addEventListener('visibilitychange', resume);
+  window.addEventListener('online', resume);
+});
+onUnmounted(() => {
+  disposed = true; clearInterval(timer);
+  document.removeEventListener('visibilitychange', resume);
+  window.removeEventListener('online', resume);
+});
 </script>
 
 <style scoped>
-.today-page { min-height: 100vh; padding: max(12px, env(safe-area-inset-top)) 12px 24px; }
-.today-shell { width: min(100%, 480px); margin: 0 auto; }
-.hero-card, .section-card, .summary-card, .discover-card, .modal-card {
-  border-radius: 30px; background: rgba(255, 252, 249, 0.9); border: 1px solid rgba(239, 208, 193, 0.78); box-shadow: 0 22px 44px rgba(109, 57, 41, 0.08);
-}
-.hero-card, .section-card { padding: 20px 16px; }
-.hero-card { display: grid; gap: 16px; }
-.eyebrow, .section-label { margin: 0 0 10px; color: #af5f42; font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
-.status-pill { display: inline-flex; width: fit-content; padding: 8px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; }
-.status-active { background: #e8f7ee; color: #1d7a46; }
-.status-pending { background: #fff3df; color: #9b6112; }
-.status-rejected { background: #ffe8e1; color: #b34b36; }
-.status-suspended { background: #f1e5df; color: #7f5448; }
-.description { color: #6f564d; line-height: 1.7; }
-.hero-stats, .discover-grid, .summary-grid { display: grid; gap: 12px; }
-.hero-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.stat-card, .summary-card { padding: 16px; border-radius: 22px; background: rgba(255,255,255,0.88); }
-.stat-card span, .summary-badge, .section-caption { color: #8b675b; font-size: 12px; }
-.stat-card strong { display: block; margin-top: 8px; font-size: 1.2rem; color: #2f211d; }
-.section-head, .discover-meta, .action-row, .modal-list { display: flex; gap: 10px; justify-content: space-between; align-items: center; }
-.section-head { margin-bottom: 14px; }
-.section-head.compact { margin-bottom: 10px; }
-.discover-grid { grid-template-columns: 1fr; }
-.discover-card { overflow: hidden; }
-.discover-photo, .modal-photo { min-height: 180px; padding: 14px; display: flex; align-items: end; }
-.discover-overlay, .modal-photo { color: #fff8f4; font-weight: 700; }
-.discover-body, .modal-body { padding: 16px; }
-.discover-meta { justify-content: flex-start; flex-wrap: wrap; color: #8b675b; font-size: 13px; }
-.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.tag { padding: 7px 10px; border-radius: 999px; background: #fff2ea; color: #8e5b4c; font-size: 12px; }
-.tag.soft { background: #fff7f2; }
-.action-button { border: none; border-radius: 999px; padding: 12px 16px; font-weight: 700; cursor: pointer; }
-.action-button.pass { background: #f3e2db; color: #7a5247; }
-.action-button.detail { background: #fff3ea; color: #9f633f; }
-.action-button.like { background: linear-gradient(135deg, #d56f4e 0%, #ed9f79 100%); color: #fff; }
-.queue-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
-.queue-list li { display: flex; justify-content: space-between; gap: 12px; color: #6f564d; }
-.loading-shell { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
-.loading-card { width: min(100%, 420px); padding: 28px 22px; border-radius: 28px; background: rgba(255,252,249,0.9); border: 1px solid rgba(239,208,193,0.78); box-shadow: 0 24px 48px rgba(109,57,41,0.1); text-align:center; }
-.modal-backdrop { position: fixed; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(36, 20, 16, 0.36); }
-.modal-card { width: min(100%, 420px); overflow: hidden; }
-.modal-list { display: grid; gap: 10px; margin-top: 16px; }
-.modal-actions { margin-top: 18px; }
-@media (max-width: 720px) { .hero-stats { grid-template-columns: 1fr; } .section-head, .action-row { flex-direction: column; align-items: flex-start; } .action-row { width: 100%; } .action-button { width: 100%; } }
-</style>
+.daily-matches { width: 100%; max-width: 480px; margin: 0 auto; color: #31211d; }
+.match-heading { margin: 4px 0 20px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.daily-matches .match-heading .match-eyebrow { margin: 0; color: #af5f42; font-size: 13px !important; letter-spacing: .14em; font-weight: 800; line-height: 1.5; }
+.match-heading h1 { margin: 0; }
+.deck-viewport { position: relative; width: calc(100% + 32px); margin-inline: -16px; }
+.match-track { position: relative; display: flex; gap: 12px; padding-inline: 24px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 24px; scrollbar-width: none; }
+.peek-control { position: absolute; top: 0; bottom: 0; width: 24px; border: 0; background: transparent; padding: 0; cursor: pointer; z-index: 2; }
+.peek-control.previous { left: 0; }
+.peek-control.next { right: 0; }
+.match-track::-webkit-scrollbar { display: none; }
+.match-slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: center; scroll-snap-stop: always; }
+.flip-scene { perspective: 1400px; height: clamp(400px, calc(100dvh - 222px), 720px); }
+.flip-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .65s cubic-bezier(.22,.7,.22,1); }
+.is-open .flip-inner { transform: rotateY(180deg); }
+.card-cover, .card-person { position: absolute; inset: 0; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 18px; overflow: hidden; border: 0; }
+.card-cover { display: flex; flex-direction: column; justify-content: center; gap: 32px; align-items: center; padding: 24px; color: #8b4936; background: radial-gradient(ellipse at 50% 35%, #fff8ee 0%, transparent 60%), linear-gradient(145deg,#ffe3d6,#f3b39b); cursor: pointer; }
+.card-cover:disabled { cursor: default; opacity: 1; }
+.cover-ornament { display: grid; place-items: center; margin: 0; }
+.cover-ornament span { font-size: 68px; line-height: 1; color: #d66d4d; }
+.cover-copy { display: grid; gap: 12px; text-align: center; }
+.cover-copy strong { font-size: 21px; font-weight: 700; letter-spacing: -.04em; }
+.cover-copy > span { font-size: 13px; line-height: 1.6; }
+.cover-copy .countdown { font-size: 20px; font-variant-numeric: tabular-nums; font-weight: 800; color: #ba5437; }
+.card-person { transform: rotateY(180deg); background: #fffcf9; display: flex; flex-direction: column; }
+.person-photo { position: relative; flex: 1; min-height: 180px; background: linear-gradient(135deg,#f5b490,#f8d6be); overflow: hidden; }
+.person-photo::after { content: ''; position: absolute; inset: 50% 0 0; background: linear-gradient(transparent,rgba(49,33,29,.72)); pointer-events: none; }
+.person-photo img { width: 100%; height: 100%; position: absolute; object-fit: cover; object-position: center 30%; }
+.photo-placeholder { height: 100%; display: grid; place-items: center; font-size: 70px; color: #fff8f4; }
+.person-title { position: absolute; bottom: 18px; left: 18px; right: 18px; z-index: 1; color: #fff8f4; }
+.person-title h2 { margin: 0; font-size: 25px !important; }
+.person-title h2 span { font-weight: 400; margin-left: 5px; }
+.person-title p { margin: 5px 0 0; font-size: 12px; }
+.person-details { flex: none; padding: 16px; }
+.person-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.person-tags span { border-radius: 10px; padding: 6px 9px; background: #fff2ea; font-size: 11px; color: #8e5b4c; }
+.person-intro { font-size: 13px; line-height: 1.65; margin: 12px 0 16px; max-height: 66px; overflow-y: auto; color: #6f564d; }
+.reaction-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding:12px 12px 0; }
+.reaction-buttons button { border: 1px solid transparent; border-radius: 14px; padding: 12px 8px; background: #f3e2db; color: #7a5247; font-weight: 700; font-size: 13px; cursor: pointer; }
+.reaction-buttons .like-button { background: linear-gradient(135deg,#d56f4e,#ed9f79); color: white; }
+.reaction-buttons .chosen { border-color: #ba5437; }
+.credit-card { height: clamp(400px,calc(100dvh - 222px),720px); padding: 24px; display: flex; flex-direction: column; justify-content: center; gap: 32px; align-items: center; text-align: center; border-radius: 18px; border: 0; background: linear-gradient(160deg,#fffaf5,#f5d7c7); color: #8b4936; }
+.credit-status { font-size: 11px; color: #8b675b; }
+.credit-copy { display: grid; gap: 12px; }
+.credit-symbol { font-size: 60px; color: #d66d4d; }
+.credit-copy p { margin: 0; font-size: 14px; line-height: 1.7; }
+.match-notice { padding: 60px 20px; text-align: center; color: #8b675b; }
+.notice-heart { font-size: 56px; color: #d66d4d; }
+.match-notice p { font-size: 14px; line-height: 1.7; }
+.retry-button, .match-error button { border: 1px solid #e5c2b2; border-radius: 12px; color: #9d5a43; background: #fff8f4; padding: 10px 16px; }
+.match-error { color: #b34b36; font-size: 13px; line-height: 1.6; }
+@media (prefers-reduced-motion: reduce) { .flip-inner { transition: none; } }
+@media (max-width: 350px) { .card-cover, .credit-card { padding: 20px; } .deck-viewport { width: calc(100% + 20px); margin-inline: -10px; } .cover-copy .countdown { font-size: 18px; } }
+.card-menu{position:absolute;top:12px;right:12px;z-index:3;border:0;border-radius:50%;width:44px;height:44px;background:rgba(255,248,244,.92);color:#92553f;font-size:28px;cursor:pointer}.person-title a{color:inherit;text-decoration:none}.photo-profile-link{position:absolute;inset:0;display:block;color:inherit;text-decoration:none}.photo-profile-link:focus-visible{outline:3px solid #d56f4e;outline-offset:-4px}</style>

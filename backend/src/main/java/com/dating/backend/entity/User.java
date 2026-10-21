@@ -25,6 +25,19 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class User {
+    private String sanctionType;
+    private java.time.Instant suspendedUntil;
+    private String statusBeforeSanction;
+    @Column(length=1000) private String sanctionReason;
+    @Column(nullable=false,columnDefinition="integer default 0") private int warningCount;
+    @Column(nullable=false,columnDefinition="bigint default 0") private long totalBlockCount;
+
+    private boolean resting;
+    private long sessionVersion;
+    @Builder.Default private String profileReviewStatus="NONE";
+    private long profileRevision;
+    @Column(length=1000) private String profileReviewNote;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

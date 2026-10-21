@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class ProfileService {
 
+    private final com.dating.backend.matching.ProfileModeration moderation;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserVerificationRepository userVerificationRepository;
@@ -48,6 +49,7 @@ public class ProfileService {
         UserVerification verification = userVerificationRepository.findByUserId(user.getId())
                 .orElseGet(() -> UserVerification.builder().userId(user.getId()).build());
 
+        moderation.beforeEdit(user);
         user.setNickname(request.getNickname());
 
         profile.setRegion(request.getRegion());

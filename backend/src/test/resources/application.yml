@@ -15,6 +15,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
 app:
+  notices:
+    jobs: false
+  credits:
+    test-topup: true
   jwt:
     secret: change-this-secret-key-change-this-secret-key
     expiration-ms: 3600000
